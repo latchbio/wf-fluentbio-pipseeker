@@ -1,0 +1,20 @@
+Cell Type,Alternative Name,Additional Information
+B,,
+Naive CD4 T,,
+Memory CD4 T,Effector Memory CD4 T,
+Central Memory CD4 T,,
+CD8 T,Effector Memory CD8 T,
+Natural Killer,,
+CD14 Monocyte,,
+CD16 Monocyte,,
+Dendritic,Conventional Dendritic 2,
+Plasma,,
+Platelet,,
+HSPC,,
+Plasmacytoid Dendritic,,Only available in v4 references
+Naive CD8 T,,Only available in v4-detailed reference
+Central Memory CD8 T,,Only available in v4-detailed reference
+CD4 T,,Catch all T cell type only available in v4-detailed reference
+Cytotoxic CD4 T,,CD4 CD8 T cell intermediate cell type only available in v4-detailed reference
+High Mito,,Signature enriched for mitochondrial genes only available in v4-detailed reference
+Conventional Dendritic 1,,Only available in v4-detailed reference

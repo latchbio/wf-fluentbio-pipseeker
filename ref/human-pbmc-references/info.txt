@@ -1,0 +1,20 @@
+Human PBMC Annotation References
+
+Description:
+- References were built from Fluent internal datasets using frozen PBMCs obtained from AllCells
+- References are based on cell types identified via Azimuth (https://azimuth.hubmapconsortium.org/references/#Human%20-%20PBMC)
+
+Files:
+1. metadata.csv
+	- List of cell types and naming information differences across references
+
+2. human-pbmc-v3.csv
+	- Reference designed based on expression profile consistent with the PIPseq v3 chemistry.
+
+3. human-pbmc-v4.csv
+	- Reference designed based on PIPseq v4 chemistry expression profile. The v4 chemistry captured more consistent profiles and additional cell types, such as plasmacytoid dendritic cells.
+
+4. human-pbmc-v4-detailed.csv
+	- Reference designed based on PIPseq v4 chemistry, but expanded to include more refined cell types. Distinctions are made between different cell subtypes, including T cells and conventional dendritic cells. A high mitochondrial cell type was also included to capture clusters with lower quality cells.
+
+Please direct any questions to bioinformatics{at}fluentbio.com
