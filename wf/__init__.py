@@ -91,6 +91,10 @@ metadata = LatchMetadata(
             display_name="Exons Only",
             batch_table_column=True,
         ),
+        "min_sensitivity": LatchParameter(
+            display_name="Minimum Sensitivity",
+            batch_table_column=True,
+        ),
         "output_directory": LatchParameter(
             display_name="Output Directory",
             batch_table_column=True,
@@ -158,7 +162,7 @@ metadata = LatchMetadata(
             Section(
                 "Cell Calling",
                 Params(
-                    "exons_only",
+                    "min_sensitivity",
                 ),
             ),
         ),
@@ -185,6 +189,7 @@ def pipseeker_wf(
     sorted_bam: bool = True,
     remove_bam: bool = False,
     exons_only: bool = False,
+    min_sensitivity: int = 1,
 ) -> LatchOutputDir:
     """Fluent BioSciences PIPseeker
 
@@ -217,6 +222,7 @@ def pipseeker_wf(
         downsample=downsample,
         retain_barcoded_fastqs=retain_barcoded_fastqs,
         exons_only=exons_only,
+        min_sensitivity=min_sensitivity,
     )
 
 

@@ -45,6 +45,7 @@ def pipseeker_task(
     downsample: Optional[int] = None,
     retain_barcoded_fastqs: bool = False,
     exons_only: bool = False,
+    min_sensitivity: int = 1,
 ) -> LatchOutputDir:
     print()
     print("Compiling reference genome")
@@ -118,6 +119,8 @@ def pipseeker_task(
         f"{save_svg}",
         "--dpi",
         f"{dpi}",
+        "--min-sensitivity",
+        f"{min_sensitivity}",
     ]
 
     if chemistry == Chemistry.v3:
