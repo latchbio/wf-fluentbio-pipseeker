@@ -29,15 +29,19 @@ class Verbosity(Enum):
 @custom_task(cpu=18, memory=60)
 def pipseeker_task(
     fastq_directory: LatchDir,
-    output_directory: LatchOutputDir,
     genome_source: str,
     compiled_genome_reference: GenomeType,
     custom_genome_reference_fasta: LatchFile,
     custom_genome_reference_gtf: LatchFile,
     chemistry: Chemistry = Chemistry.v4,
+    output_directory: LatchOutputDir = LatchOutputDir("latch:///PIPseeker_Output"),
+    verbosity: Verbosity = Verbosity.two,
+    random_seed: int = 0,
+    save_svg: bool = True,
+    dpi: int = 200,
     sorted_bam: bool = False,
     # run_barnyard: bool = False,
-    verbosity: Verbosity = Verbosity.two,
+    remove_bam: bool = True,
 ) -> LatchOutputDir:
     print()
     print("Compiling reference genome")
@@ -105,6 +109,12 @@ def pipseeker_task(
         "--verbosity",
         f"{verbosity.value}",
         "--skip-version-check",
+        "--random_seed",
+        f"{random_seed}",
+        "--save-svg",
+        f"{save_svg}",
+        "--dpi",
+        f"{dpi}",
     ]
 
     if chemistry == Chemistry.v3:
@@ -128,13 +138,8 @@ def pipseeker_task(
     if sorted_bam is True:
         pipseeker_cmd.append("--sorted-bam")
 
-    # if verbosity is not None:
-    #     pipseeker_cmd.extend(
-    #         [
-    #             "--verbosity",
-    #             str(verbosity.value),
-    #         ]
-    #     )
+    if remove_bam is True:
+        pipseeker_cmd.append("--remove-bam")
 
     print()
     print(f'Running {" ".join(pipseeker_cmd)}')

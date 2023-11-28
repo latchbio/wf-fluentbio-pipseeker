@@ -59,6 +59,18 @@ metadata = LatchMetadata(
             display_name="Verbosity",
             batch_table_column=True,
         ),
+        "random_seed": LatchParameter(
+            display_name="Random Seed",
+            batch_table_column=True,
+        ),
+        "save_svg": LatchParameter(
+            display_name="Save SVG",
+            batch_table_column=True,
+        ),
+        "dpi": LatchParameter(
+            display_name="DPI",
+            batch_table_column=True,
+        ),
         # "run_barnyard": LatchParameter(
         #     display_name="Run Barnyard",
         #     batch_table_column=True,
@@ -67,10 +79,10 @@ metadata = LatchMetadata(
             display_name="Generate Sorted BAM",
             batch_table_column=True,
         ),
-        # "remove_bam": LatchParameter(
-        #     display_name="Remove BAM",
-        #     batch_table_column=True,
-        # ),
+        "remove_bam": LatchParameter(
+            display_name="Remove BAM",
+            batch_table_column=True,
+        ),
         "output_directory": LatchParameter(
             display_name="Output Directory",
             batch_table_column=True,
@@ -79,37 +91,45 @@ metadata = LatchMetadata(
     tags=[],
     flow=[
         Section(
-            "Basic Parameters",
+            "Basic Inputs",
             Params("fastq_directory", "chemistry"),
             Fork(
                 "genome_source",
                 "",
                 compiled=ForkBranch(
-                    "Compiled Reference Genome", Params("compiled_genome_reference")
+                    "Compiled Reference Genome",
+                    Params(
+                        "compiled_genome_reference",
+                    ),
                 ),
                 custom=ForkBranch(
                     "Custom Reference Genome",
                     Params(
-                        "custom_genome_reference_fasta", "custom_genome_reference_gtf"
+                        "custom_genome_reference_fasta",
+                        "custom_genome_reference_gtf",
                     ),
                 ),
             ),
             Params("output_directory"),
         ),
         Spoiler(
-            "Parameters",
+            "Additional Parameters",
             Section(
-                "Verbosity",
+                "General",
                 Params(
                     "verbosity",
+                    "random_seed",
+                    "dpi",
+                    "save_svg",
                 ),
             ),
             Section(
-                "BAM",
+                "Mapping",
                 Params(
                     "sorted_bam",
+                    "remove_bam",
                 ),
-            ),  # Add more
+            ),
         ),
     ],
 )
@@ -123,11 +143,14 @@ def pipseeker_wf(
     custom_genome_reference_fasta: LatchFile,
     custom_genome_reference_gtf: LatchFile,
     chemistry: Chemistry = Chemistry.v4,
-    sorted_bam: bool = False,
-    verbosity: Verbosity = Verbosity.two,
     output_directory: LatchOutputDir = LatchOutputDir("latch:///PIPseeker_Output"),
     # run_barnyard: bool = False,
-    # remove_bam: bool = False,
+    verbosity: Verbosity = Verbosity.two,
+    random_seed: int = 0,
+    save_svg: bool = True,
+    dpi: int = 200,
+    sorted_bam: bool = True,
+    remove_bam: bool = False,
 ) -> LatchOutputDir:
     """Fluent BioSciences PIPseeker
 
@@ -152,8 +175,11 @@ def pipseeker_wf(
         output_directory=output_directory,
         sorted_bam=sorted_bam,
         verbosity=verbosity,
+        random_seed=random_seed,
+        save_svg=save_svg,
+        dpi=dpi,
         # run_barnyard=run_barnyard,
-        # remove_bam=remove_bam,
+        remove_bam=remove_bam,
     )
 
 
