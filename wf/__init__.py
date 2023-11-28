@@ -12,6 +12,7 @@ from latch.types import (
     Section,
     Fork,
     ForkBranch,
+    Spoiler,
 )
 from latch.resources.launch_plan import LaunchPlan
 from dataclasses import dataclass
@@ -95,7 +96,21 @@ metadata = LatchMetadata(
             ),
             Params("output_directory"),
         ),
-        Section("Parameters", Params("verbosity", "sorted_bam")),
+        Spoiler(
+            "Parameters",
+            Section(
+                "Verbosity",
+                Params(
+                    "verbosity",
+                ),
+            ),
+            Section(
+                "BAM",
+                Params(
+                    "sorted_bam",
+                ),
+            ),  # Add more
+        ),
     ],
 )
 
