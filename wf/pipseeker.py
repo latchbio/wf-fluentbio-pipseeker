@@ -42,6 +42,9 @@ def pipseeker_task(
     sorted_bam: bool = False,
     # run_barnyard: bool = False,
     remove_bam: bool = True,
+    downsample: Optional[int] = None,
+    retain_barcoded_fastqs: bool = False,
+    exons_only: bool = False,
 ) -> LatchOutputDir:
     print()
     print("Compiling reference genome")
@@ -132,14 +135,28 @@ def pipseeker_task(
             ]
         )
 
-    # if run_barnyard is True:
-    #     pipseeker_cmd.append("--run-barnyard")
+    if downsample is not None:
+        pipseeker_cmd.extend(
+            [
+                "--downsample-to",
+                f"{downsample}",
+            ]
+        )
+
+    if retain_barcoded_fastqs is True:
+        pipseeker_cmd.append("--retain-barcoded-fastqs")
 
     if sorted_bam is True:
         pipseeker_cmd.append("--sorted-bam")
 
     if remove_bam is True:
         pipseeker_cmd.append("--remove-bam")
+
+    if exons_only is True:
+        pipseeker_cmd.append("--exons-only")
+
+    # if run_barnyard is True:
+    #     pipseeker_cmd.append("--run-barnyard")
 
     print()
     print(f'Running {" ".join(pipseeker_cmd)}')

@@ -71,10 +71,14 @@ metadata = LatchMetadata(
             display_name="DPI",
             batch_table_column=True,
         ),
-        # "run_barnyard": LatchParameter(
-        #     display_name="Run Barnyard",
-        #     batch_table_column=True,
-        # ),
+        "downsample": LatchParameter(
+            display_name="Downsample To",
+            batch_table_column=True,
+        ),
+        "retain_barcoded_fastqs": LatchParameter(
+            display_name="Retain Barcoded FASTQs",
+            batch_table_column=True,
+        ),
         "sorted_bam": LatchParameter(
             display_name="Generate Sorted BAM",
             batch_table_column=True,
@@ -83,10 +87,18 @@ metadata = LatchMetadata(
             display_name="Remove BAM",
             batch_table_column=True,
         ),
+        "exons_only": LatchParameter(
+            display_name="Exons Only",
+            batch_table_column=True,
+        ),
         "output_directory": LatchParameter(
             display_name="Output Directory",
             batch_table_column=True,
         ),
+        # "run_barnyard": LatchParameter(
+        #     display_name="Run Barnyard",
+        #     batch_table_column=True,
+        # ),
     },
     tags=[],
     flow=[
@@ -124,10 +136,29 @@ metadata = LatchMetadata(
                 ),
             ),
             Section(
+                "FASTQ Processing",
+                Params(
+                    "downsample",
+                    "retain_barcoded_fastqs",
+                ),
+            ),
+            Section(
                 "Mapping",
                 Params(
                     "sorted_bam",
                     "remove_bam",
+                ),
+            ),
+            Section(
+                "Molecular Counting",
+                Params(
+                    "exons_only",
+                ),
+            ),
+            Section(
+                "Cell Calling",
+                Params(
+                    "exons_only",
                 ),
             ),
         ),
@@ -149,8 +180,11 @@ def pipseeker_wf(
     random_seed: int = 0,
     save_svg: bool = True,
     dpi: int = 200,
+    downsample: Optional[int] = None,
+    retain_barcoded_fastqs: bool = False,
     sorted_bam: bool = True,
     remove_bam: bool = False,
+    exons_only: bool = False,
 ) -> LatchOutputDir:
     """Fluent BioSciences PIPseeker
 
@@ -180,6 +214,9 @@ def pipseeker_wf(
         dpi=dpi,
         # run_barnyard=run_barnyard,
         remove_bam=remove_bam,
+        downsample=downsample,
+        retain_barcoded_fastqs=retain_barcoded_fastqs,
+        exons_only=exons_only,
     )
 
 
