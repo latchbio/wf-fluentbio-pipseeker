@@ -95,14 +95,109 @@ metadata = LatchMetadata(
             display_name="Minimum Sensitivity",
             batch_table_column=True,
         ),
-        "output_directory": LatchParameter(
-            display_name="Output Directory",
+        "max_sensitivity": LatchParameter(
+            display_name="Maximum Sensitivity",
             batch_table_column=True,
         ),
-        # "run_barnyard": LatchParameter(
-        #     display_name="Run Barnyard",
-        #     batch_table_column=True,
-        # ),
+        "force_cells": LatchParameter(
+            display_name="Force Cells",
+            batch_table_column=True,
+        ),
+        "run_barnyard": LatchParameter(
+            display_name="Run Barnyard",
+            batch_table_column=True,
+        ),
+        "clustering_percent_genes": LatchParameter(
+            display_name="Clustering Percent Genes",
+            batch_table_column=True,
+        ),
+        "diff_exp_genes": LatchParameter(
+            display_name="Diff Exp Genes",
+            batch_table_column=True,
+        ),
+        "principal_components": LatchParameter(
+            display_name="Principal Components",
+            batch_table_column=True,
+        ),
+        "nearest_neighbors": LatchParameter(
+            display_name="Nearest Neighbours",
+            batch_table_column=True,
+        ),
+        "resolution": LatchParameter(
+            display_name="Resolution",
+            batch_table_column=True,
+        ),
+        "clustering_sensitivity": LatchParameter(
+            display_name="Clustering Sensitivity",
+            batch_table_column=True,
+        ),
+        "min_clusters_kmeans": LatchParameter(
+            display_name="Min Clusters kMeans",
+            batch_table_column=True,
+        ),
+        "max_clusters_kmeans": LatchParameter(
+            display_name="Max Clusters kMeans",
+            batch_table_column=True,
+        ),
+        "umap_axes": LatchParameter(
+            display_name="UMAP Axes",
+            batch_table_column=True,
+        ),
+        "annotation": LatchParameter(
+            display_name="Annotation",
+            batch_table_column=True,
+        ),
+        "report_id": LatchParameter(
+            display_name="Report ID",
+            batch_table_column=True,
+        ),
+        "report_description": LatchParameter(
+            display_name="Report Description",
+            batch_table_column=True,
+        ),
+        ##### ADD LOGIC
+        "adt_fastq": LatchParameter(
+            display_name="ADT FASTQ Path",
+            batch_table_column=True,
+        ),
+        "adt_fastq_prefix": LatchParameter(
+            display_name="ADT FASTQ Prefix",
+            batch_table_column=True,
+            description="Add a . if all files in the folder are to be processed or add the a prefix for the names of the files to be processed."
+        ),
+        "adt_tags": LatchParameter(
+            display_name="ADT Tags path",
+            batch_table_column=True,
+        ),
+        "adt_position": LatchParameter(
+            display_name="ADT Position",
+            batch_table_column=True,
+        ),
+        "adt_annotation": LatchParameter(
+            display_name="ADT Annotation",
+            batch_table_column=True,
+        ),
+        "adt_colormap": LatchParameter(
+            display_name="ADT Colormap",
+            batch_table_column=True,
+        ),
+        "adt_min_percent": LatchParameter(
+            display_name="ADT Min Percent",
+            batch_table_column=True,
+        ),
+        "adt_max_percent": LatchParameter(
+            display_name="ADT Max Percent",
+            batch_table_column=True,
+        ),
+        "adt_min_value": LatchParameter(
+            display_name="ADT Min Value",
+            batch_table_column=True,
+        ),
+        "adt_max_value": LatchParameter(
+            display_name="ADT Max Value",
+            batch_table_column=True,
+        ),
+
     },
     tags=[],
     flow=[
@@ -163,6 +258,56 @@ metadata = LatchMetadata(
                 "Cell Calling",
                 Params(
                     "min_sensitivity",
+                    "max_sensitivity",
+                    "force_cells",
+                ),
+            ),
+            Section(
+                "Barnyard Analysis",
+                Params(
+                    "run_barnyard",
+                ),
+            ),
+            Section(
+                "Clustering",
+                Params(
+                    "clustering_percent_genes",
+                    "diff_exp_genes",
+                    "principal_components",
+                    "nearest_neighbors",
+                    "resolution",
+                    "clustering_sensitivity",
+                    "min_clusters_kmeans",
+                    "max_clusters_kmeans",
+                    "umap_axes",
+                ),
+            ),
+            Section(
+                "Cell Type Annotation",
+                Params(
+                    "annotation",
+                ),
+            ),
+            Section(
+                "Report",
+                Params(
+                    "report_id",
+                    "report_description",
+                ),
+            ),
+            Section(
+                "ADT",
+                Params(
+                    "adt_fastq",
+                    "adt_fastq_prefix",
+                    "adt_tags",
+                    "adt_position",
+                    "adt_annotation",
+                    "adt_colormap",
+                    "adt_min_percent",
+                    "adt_max_percent",
+                    "adt_min_value",
+                    "adt_max_value",                
                 ),
             ),
         ),
@@ -190,6 +335,31 @@ def pipseeker_wf(
     remove_bam: bool = False,
     exons_only: bool = False,
     min_sensitivity: int = 1,
+    max_sensitivity: int = 5,
+    force_cells: Optional[int] = None,
+    run_barnyard: bool = False,
+    clustering_percent_genes: float = 10.0,
+    diff_exp_genes: int = 50,
+    principal_components: Optional[int] = None,
+    nearest_neighbors: Optional[int] = None,
+    resolution: Optional[float] = None,
+    clustering_sensitivity: str = "medium",
+    min_clusters_kmeans: Optional[int] = None,
+    max_clusters_kmeans: Optional[int] = None,
+    umap_axes: bool = False,
+    annotation: Optional[LatchFile] = None,
+    report_id: Optional[str] = None,
+    report_description: Optional[str] = None,
+    adt_fastq: Optional[LatchDir] = None,
+    adt_fastq_prefix: Optional[str] = None,
+    adt_tags: Optional[LatchFile] = None,
+    adt_position: Optional[int] = 0,
+    adt_annotation: Optional[LatchFile] = None,
+    adt_colormap: Optional[str] = "gray-to-green",
+    adt_min_percent: Optional[float] = 1.0,
+    adt_max_percent: Optional[float] = 99.0,
+    adt_min_value: Optional[float] = None,
+    adt_max_value: Optional[float] = None,
 ) -> LatchOutputDir:
     """Fluent BioSciences PIPseeker
 
@@ -217,12 +387,36 @@ def pipseeker_wf(
         random_seed=random_seed,
         save_svg=save_svg,
         dpi=dpi,
-        # run_barnyard=run_barnyard,
         remove_bam=remove_bam,
         downsample=downsample,
         retain_barcoded_fastqs=retain_barcoded_fastqs,
         exons_only=exons_only,
         min_sensitivity=min_sensitivity,
+        max_sensitivity=max_sensitivity,
+        force_cells=force_cells,
+        run_barnyard=run_barnyard,
+        clustering_percent_genes=clustering_percent_genes,
+        diff_exp_genes=diff_exp_genes,
+        principal_components=principal_components,
+        nearest_neighbors=nearest_neighbors,
+        resolution=resolution,
+        clustering_sensitivity=clustering_sensitivity,
+        min_clusters_kmeans=min_clusters_kmeans,
+        max_clusters_kmeans=max_clusters_kmeans,
+        umap_axes=umap_axes,
+        annotation=annotation,
+        report_id=report_id,
+        report_description=report_description,
+        adt_fastq=adt_fastq,
+        adt_fastq_prefix=adt_fastq_prefix,
+        adt_tags=adt_tags,
+        adt_position=adt_position,
+        adt_annotation=adt_annotation,
+        adt_colormap=adt_colormap,
+        adt_min_percent=adt_min_percent,
+        adt_max_percent=adt_max_percent,
+        adt_min_value=adt_min_value,
+        adt_max_value=adt_max_value,
     )
 
 

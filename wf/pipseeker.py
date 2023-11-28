@@ -46,6 +46,21 @@ def pipseeker_task(
     retain_barcoded_fastqs: bool = False,
     exons_only: bool = False,
     min_sensitivity: int = 1,
+    max_sensitivity: int = 5,
+    force_cells: Optional[int] = None,
+    run_barnyard: bool = False,
+    clustering_percent_genes: float = 10.0,
+    diff_exp_genes: int = 50,
+    principal_components: Optional[int] = None,
+    nearest_neighbors: Optional[int] = None,
+    resolution: Optional[float] = None,
+    clustering_sensitivity: str = "medium",
+    min_clusters_kmeans: Optional[int] = None,
+    max_clusters_kmeans: Optional[int] = None,
+    umap_axes: bool = False,
+    annotation: Optional[LatchFile] = None,
+    report_id: Optional[str] = None,
+    report_description: Optional[str] = None,
 ) -> LatchOutputDir:
     print()
     print("Compiling reference genome")
@@ -121,6 +136,14 @@ def pipseeker_task(
         f"{dpi}",
         "--min-sensitivity",
         f"{min_sensitivity}",
+        "--max-sensitivity",
+        f"{max_sensitivity}",
+        "--clustering-percent-genes",
+        f"{clustering_percent_genes}",
+        "--diff-exp-genes",
+        f"{diff_exp_genes}",
+        "--clustering-sensitivity",
+        f"{clustering_sensitivity}",
     ]
 
     if chemistry == Chemistry.v3:
@@ -145,6 +168,53 @@ def pipseeker_task(
                 f"{downsample}",
             ]
         )
+    if force_cells is not None:
+        pipseeker_cmd.extend(
+            [
+                "--force-cells",
+                f"{force_cells}",
+            ]
+        )
+
+    if min_clusters_kmeans is not None:
+        pipseeker_cmd.extend(
+            [
+                "--min-clusters-kmeans",
+                f"{min_clusters_kmeans}",
+            ]
+        )
+    
+    if max_clusters_kmeans is not None:
+        pipseeker_cmd.extend(
+            [
+                "--max-clusters-kmeans",
+                f"{max_clusters_kmeans}",
+            ]
+        )
+
+    if annotation is not None:
+        pipseeker_cmd.extend(
+            [
+                "--annotation",
+                f"{annotation.local_path}",
+            ]
+        )
+    
+    if report_id is not None:
+        pipseeker_cmd.extend(
+            [
+                "--id",
+                f"{report_id}",
+            ]
+        )
+
+    if report_description is not None:
+        pipseeker_cmd.extend(
+            [
+                "--description",
+                f"{report_description}",
+            ]
+        )
 
     if retain_barcoded_fastqs is True:
         pipseeker_cmd.append("--retain-barcoded-fastqs")
@@ -158,9 +228,30 @@ def pipseeker_task(
     if exons_only is True:
         pipseeker_cmd.append("--exons-only")
 
-    # if run_barnyard is True:
-    #     pipseeker_cmd.append("--run-barnyard")
+    if run_barnyard is True:
+        pipseeker_cmd.append("--run-barnyard")
 
+    if umap_axes is True:
+        pipseeker_cmd.append("--umap-axes")
+
+    if (principal_components is None) and (nearest_neighbors is None) and (resolution is None):
+        print("")
+    elif (principal_components is not None) and (nearest_neighbors is not None) and (resolution is not None):
+        pipseeker_cmd.extend(
+            [
+                "--principal-components",
+                f"{principal_components}",
+                "--nearest-neighbors",
+                f"{nearest_neighbors}",
+                "--resolution",
+                f"{resolution}",
+            ]
+        )
+    else:
+        print("--principal-components, --nearest-neighbors and --resolution must all be used or omitted at the same time. \
+              You cannot specify one argument and leave the others unspecified.\
+              PIPseeker will run with none of the inputted values and assign these parameters automatically.")
+    
     print()
     print(f'Running {" ".join(pipseeker_cmd)}')
     subprocess.run(pipseeker_cmd, check=True)
