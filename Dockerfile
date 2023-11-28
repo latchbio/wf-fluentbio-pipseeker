@@ -25,7 +25,7 @@ run curl -L https://fbs-public.s3.us-east-2.amazonaws.com/public-pipseeker-relea
 
 # Latch SDK
 # DO NOT REMOVE
-run pip install latch==2.36.8
+run pip install latch==2.36.10
 run mkdir /opt/latch
 
 # Copy workflow data (use .dockerignore to skip files)

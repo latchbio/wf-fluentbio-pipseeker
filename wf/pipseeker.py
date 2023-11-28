@@ -10,39 +10,80 @@ import sys
 sys.stdout.reconfigure(line_buffering=True)
 
 
+class GenomeType(Enum):
+    human = "Human"
+    mouse = "Mouse"
+
+
 class Chemistry(Enum):
     v3 = "v3"
     v4 = "v4"
 
 
-# class Verbosity(Enum):
-#     zero = "0"
-#     one = "1"
-#     two = "2"
+class Verbosity(Enum):
+    zero = "0"
+    one = "1"
+    two = "2"
 
 
 @custom_task(cpu=18, memory=60)
 def pipseeker_task(
-    fastqs: LatchDir,
+    fastq_directory: LatchDir,
     output_directory: LatchOutputDir,
+    genome_source: str,
+    compiled_genome_reference: GenomeType,
+    custom_genome_reference_fasta: LatchFile,
+    custom_genome_reference_gtf: LatchFile,
     chemistry: Chemistry = Chemistry.v4,
     sorted_bam: bool = False,
     # run_barnyard: bool = False,
-    # verbosity: Optional[Verbosity] = None,
+    verbosity: Verbosity = Verbosity.two,
 ) -> LatchOutputDir:
     print()
-    print("Downloading default reference pipseeker-gex-reference-GRCh38-2022.04.tar.gz")
-    reference_zipped_p = LatchFile(
-        "s3://latch-public/test-data/18440/pipseeker-gex-reference-GRCh38-2022.04.tar.gz"
-    ).local_path
-    reference_p = Path("/root/pipseeker-gex-reference-GRCh38-2022.04")
+    print("Compiling reference genome")
 
-    subprocess.run(
-        ["tar", "-zxvf", f"{reference_zipped_p}", "-C", "/root"],
-        check=True,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
+    if genome_source == "compiled":
+        if compiled_genome_reference == GenomeType.human:
+            reference_zipped_p = LatchFile(
+                "s3://latch-public/test-data/18440/pipseeker-gex-reference-GRCh38-2022.04.tar.gz"
+            ).local_path
+            reference_p = Path("/root/pipseeker-gex-reference-GRCh38-2022.04")
+
+            subprocess.run(
+                ["tar", "-zxvf", f"{reference_zipped_p}", "-C", "/root"],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        elif compiled_genome_reference == GenomeType.mouse:
+            reference_zipped_p = LatchFile(
+                "s3://latch-public/test-data/18440/pipseeker-gex-reference-GRCm39-2022.04.tar.gz"
+            ).local_path  # Not uploaded to my test-data yet
+            reference_p = Path("/root/pipseeker-gex-reference-GRCm39-2022.04")
+
+            subprocess.run(
+                ["tar", "-zxvf", f"{reference_zipped_p}", "-C", "/root"],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+
+    elif genome_source == "custom":
+        custom_genome_reference_gtf_p = Path(custom_genome_reference_gtf)
+        custom_genome_reference_fasta_p = Path(custom_genome_reference_fasta)
+        reference_p = Path("/root/genome_ref")
+
+        genome_compilation_cmd = [
+            "pipseeker",
+            "buildmapref",
+            "--fasta",
+            f"{custom_genome_reference_fasta_p}",
+            "--gtf",
+            f"{custom_genome_reference_gtf_p}",
+            "--output-path",
+            f"{reference_p}",
+        ]  # Need more parameters here?
+        subprocess.run(genome_compilation_cmd, check=True)
 
     print()
     print("Preparing run")
@@ -52,7 +93,7 @@ def pipseeker_task(
         "pipseeker",
         "full",
         "--fastq",
-        f"{fastqs.local_path}/.",  # needs dot at the end
+        f"{fastq_directory.local_path}/.",  # needs dot at the end
         "--star-index-path",
         f"{reference_p}",
         "--output-path",
@@ -62,7 +103,7 @@ def pipseeker_task(
         "--chemistry",
         str(chemistry.value),
         "--verbosity",
-        "2",
+        f"{verbosity.value}",
         "--skip-version-check",
     ]
 

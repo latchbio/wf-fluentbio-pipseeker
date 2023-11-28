@@ -8,9 +8,17 @@ from latch.types import (
     LatchMetadata,
     LatchOutputDir,
     LatchParameter,
+    Params,
+    Section,
+    Fork,
+    ForkBranch,
 )
 from latch.resources.launch_plan import LaunchPlan
-from wf.pipseeker import Chemistry, pipseeker_task
+from dataclasses import dataclass
+from enum import Enum
+
+from wf.pipseeker import *
+
 
 metadata = LatchMetadata(
     display_name="Fluent BioSciences PIPseeker",
@@ -21,19 +29,35 @@ metadata = LatchMetadata(
     repository="github.com/latchbio/pipseeker",
     license="MIT",
     parameters={
-        "fastqs": LatchParameter(
-            display_name="FastQ Directory",
-            description="Directory of input FASTQ files.",
+        "fastq_directory": LatchParameter(
+            display_name="FASTQ Directory",
+            description="Directory of input FASTQ files. All FASTQ files in the directory will be used.",
+            batch_table_column=True,
+        ),
+        "genome_source": LatchParameter(display_name="Genome Reference"),
+        "compiled_genome_reference": LatchParameter(
+            display_name="Compiled Genome",
+            description="Reference genome to be used",
+            batch_table_column=True,
+        ),
+        "custom_genome_reference_fasta": LatchParameter(
+            display_name="Genome FASTA",
+            description="Reference genome FASTA to be used",
+            batch_table_column=True,
+        ),
+        "custom_genome_reference_gtf": LatchParameter(
+            display_name="Genome GTF",
+            description="Reference genome GTF to be used",
             batch_table_column=True,
         ),
         "chemistry": LatchParameter(
             display_name="Chemistry",
             batch_table_column=True,
         ),
-        # "verbosity": LatchParameter(
-        #     display_name="Verbosity",
-        #     batch_table_column=True,
-        # ),
+        "verbosity": LatchParameter(
+            display_name="Verbosity",
+            batch_table_column=True,
+        ),
         # "run_barnyard": LatchParameter(
         #     display_name="Run Barnyard",
         #     batch_table_column=True,
@@ -52,16 +76,41 @@ metadata = LatchMetadata(
         ),
     },
     tags=[],
+    flow=[
+        Section(
+            "Basic Parameters",
+            Params("fastq_directory", "chemistry"),
+            Fork(
+                "genome_source",
+                "",
+                compiled=ForkBranch(
+                    "Compiled Reference Genome", Params("compiled_genome_reference")
+                ),
+                custom=ForkBranch(
+                    "Custom Reference Genome",
+                    Params(
+                        "custom_genome_reference_fasta", "custom_genome_reference_gtf"
+                    ),
+                ),
+            ),
+            Params("output_directory"),
+        ),
+        Section("Parameters", Params("verbosity", "sorted_bam")),
+    ],
 )
 
 
 @workflow(metadata)
 def pipseeker_wf(
-    fastqs: LatchDir,
-    output_directory: LatchOutputDir,
+    fastq_directory: LatchDir,
+    genome_source: str,
+    compiled_genome_reference: GenomeType,
+    custom_genome_reference_fasta: LatchFile,
+    custom_genome_reference_gtf: LatchFile,
     chemistry: Chemistry = Chemistry.v4,
     sorted_bam: bool = False,
-    # verbosity: Optional[Verbosity] = None,
+    verbosity: Verbosity = Verbosity.two,
+    output_directory: LatchOutputDir = LatchOutputDir("latch:///PIPseeker_Output"),
     # run_barnyard: bool = False,
     # remove_bam: bool = False,
 ) -> LatchOutputDir:
@@ -79,11 +128,15 @@ def pipseeker_wf(
     """
 
     return pipseeker_task(
-        fastqs=fastqs,
+        fastq_directory=fastq_directory,
         chemistry=chemistry,
-        sorted_bam=sorted_bam,
+        genome_source=genome_source,
+        compiled_genome_reference=compiled_genome_reference,
+        custom_genome_reference_fasta=custom_genome_reference_fasta,
+        custom_genome_reference_gtf=custom_genome_reference_gtf,
         output_directory=output_directory,
-        # verbosity=verbosity,
+        sorted_bam=sorted_bam,
+        verbosity=verbosity,
         # run_barnyard=run_barnyard,
         # remove_bam=remove_bam,
     )
@@ -93,7 +146,7 @@ LaunchPlan(
     pipseeker_wf,
     "PIPseeker Sample1",
     {
-        "fastqs": LatchDir("s3://latch-public/test-data/18440/sample1"),
+        "fastq_directory": LatchDir("s3://latch-public/test-data/18440/sample1"),
         "chemistry": Chemistry.v4,
         "sorted_bam": True,
         "output_directory": LatchOutputDir("latch:///PIPseeker_Output/Sample1")
@@ -105,7 +158,7 @@ LaunchPlan(
     pipseeker_wf,
     "PIPseeker Sample2",
     {
-        "fastqs": LatchDir("s3://latch-public/test-data/18440/sample2"),
+        "fastq_directory": LatchDir("s3://latch-public/test-data/18440/sample2"),
         "chemistry": Chemistry.v4,
         "sorted_bam": True,
         "output_directory": LatchOutputDir("latch:///PIPseeker_Output/Sample2")
