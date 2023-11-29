@@ -15,11 +15,8 @@ from latch.types import (
     Spoiler,
 )
 from latch.resources.launch_plan import LaunchPlan
-from dataclasses import dataclass
-from enum import Enum
 
 from wf.pipseeker import *
-
 
 metadata = LatchMetadata(
     display_name="Fluent BioSciences PIPseeker",
@@ -155,15 +152,9 @@ metadata = LatchMetadata(
             display_name="Report Description",
             batch_table_column=True,
         ),
-        ##### ADD LOGIC
         "adt_fastq": LatchParameter(
             display_name="ADT FASTQ Path",
             batch_table_column=True,
-        ),
-        "adt_fastq_prefix": LatchParameter(
-            display_name="ADT FASTQ Prefix",
-            batch_table_column=True,
-            description="Add a . if all files in the folder are to be processed or add the a prefix for the names of the files to be processed."
         ),
         "adt_tags": LatchParameter(
             display_name="ADT Tags path",
@@ -197,7 +188,47 @@ metadata = LatchMetadata(
             display_name="ADT Max Value",
             batch_table_column=True,
         ),
-
+        "hto_fastq": LatchParameter(
+            display_name="HTO FASTQ Path",
+            batch_table_column=True,
+        ),
+        "hto_tags": LatchParameter(
+            display_name="HTO Tags path",
+            batch_table_column=True,
+        ),
+        "hto_position": LatchParameter(
+            display_name="HTO Position",
+            batch_table_column=True,
+        ),
+        "hto_annotation": LatchParameter(
+            display_name="HTO Annotation",
+            batch_table_column=True,
+        ),
+        "hto_colormap": LatchParameter(
+            display_name="HTO Colormap",
+            batch_table_column=True,
+        ),
+        "hto_min_percent": LatchParameter(
+            display_name="HTO Min Percent",
+            batch_table_column=True,
+        ),
+        "hto_max_percent": LatchParameter(
+            display_name="HTO Max Percent",
+            batch_table_column=True,
+        ),
+        "hto_min_value": LatchParameter(
+            display_name="HTO Min Value",
+            batch_table_column=True,
+        ),
+        "hto_max_value": LatchParameter(
+            display_name="HTO Max Value",
+            batch_table_column=True,
+        ),
+        "output_directory": LatchParameter(
+            display_name="Output Directory",
+            description="Output Directory",
+            batch_table_column=True,
+        ),
     },
     tags=[],
     flow=[
@@ -299,7 +330,6 @@ metadata = LatchMetadata(
                 "ADT",
                 Params(
                     "adt_fastq",
-                    "adt_fastq_prefix",
                     "adt_tags",
                     "adt_position",
                     "adt_annotation",
@@ -307,7 +337,21 @@ metadata = LatchMetadata(
                     "adt_min_percent",
                     "adt_max_percent",
                     "adt_min_value",
-                    "adt_max_value",                
+                    "adt_max_value",
+                ),
+            ),
+            Section(
+                "HTO",
+                Params(
+                    "hto_fastq",
+                    "hto_tags",
+                    "hto_position",
+                    "hto_annotation",
+                    "hto_colormap",
+                    "hto_min_percent",
+                    "hto_max_percent",
+                    "hto_min_value",
+                    "hto_max_value",
                 ),
             ),
         ),
@@ -324,7 +368,6 @@ def pipseeker_wf(
     custom_genome_reference_gtf: LatchFile,
     chemistry: Chemistry = Chemistry.v4,
     output_directory: LatchOutputDir = LatchOutputDir("latch:///PIPseeker_Output"),
-    # run_barnyard: bool = False,
     verbosity: Verbosity = Verbosity.two,
     random_seed: int = 0,
     save_svg: bool = True,
@@ -338,11 +381,11 @@ def pipseeker_wf(
     max_sensitivity: int = 5,
     force_cells: Optional[int] = None,
     run_barnyard: bool = False,
-    clustering_percent_genes: float = 10.0,
+    clustering_percent_genes: int = 10,
     diff_exp_genes: int = 50,
     principal_components: Optional[int] = None,
     nearest_neighbors: Optional[int] = None,
-    resolution: Optional[float] = None,
+    resolution: Optional[int] = None,
     clustering_sensitivity: str = "medium",
     min_clusters_kmeans: Optional[int] = None,
     max_clusters_kmeans: Optional[int] = None,
@@ -350,16 +393,24 @@ def pipseeker_wf(
     annotation: Optional[LatchFile] = None,
     report_id: Optional[str] = None,
     report_description: Optional[str] = None,
-    adt_fastq: Optional[LatchDir] = None,
-    adt_fastq_prefix: Optional[str] = None,
+    adt_fastq: Optional[LatchFile] = None,
     adt_tags: Optional[LatchFile] = None,
-    adt_position: Optional[int] = 0,
+    adt_position: int = 0,
     adt_annotation: Optional[LatchFile] = None,
-    adt_colormap: Optional[str] = "gray-to-green",
-    adt_min_percent: Optional[float] = 1.0,
-    adt_max_percent: Optional[float] = 99.0,
-    adt_min_value: Optional[float] = None,
-    adt_max_value: Optional[float] = None,
+    adt_colormap: str = "gray-to-green",
+    adt_min_percent: int = 1,
+    adt_max_percent: int = 99,
+    adt_min_value: Optional[int] = None,
+    adt_max_value: Optional[int] = None,
+    hto_fastq: Optional[LatchFile] = None,
+    hto_tags: Optional[LatchFile] = None,
+    hto_position: int = 0,
+    hto_annotation: Optional[LatchFile] = None,
+    hto_colormap: str = "gray-to-red",
+    hto_min_percent: int = 1,
+    hto_max_percent: int = 99,
+    hto_min_value: Optional[int] = None,
+    hto_max_value: Optional[int] = None,
 ) -> LatchOutputDir:
     """Fluent BioSciences PIPseeker
 
@@ -371,7 +422,6 @@ def pipseeker_wf(
     The outputs of PIPseeker can then be used for subsequent, specialized tertiary analysis streams.
     PIPseeker also supports specialized applications like measuring surface protein levels using antibody-derived tags (ADTs) and cell hashing using hashtag oligonucleotides (HTOs).
 
-    This version of PIPseeker is an MVP built by LatchBio. Currently, it includes the default `pipseeker-gex-reference-GRCh38-2022.04.tar.gz` reference for genomic analysis. Additional reference genomes and parameters can be made available upon request to cater to specific research needs and applications.
     """
 
     return pipseeker_task(
@@ -408,7 +458,6 @@ def pipseeker_wf(
         report_id=report_id,
         report_description=report_description,
         adt_fastq=adt_fastq,
-        adt_fastq_prefix=adt_fastq_prefix,
         adt_tags=adt_tags,
         adt_position=adt_position,
         adt_annotation=adt_annotation,
@@ -417,6 +466,15 @@ def pipseeker_wf(
         adt_max_percent=adt_max_percent,
         adt_min_value=adt_min_value,
         adt_max_value=adt_max_value,
+        hto_fastq=hto_fastq,
+        hto_tags=hto_tags,
+        hto_position=hto_position,
+        hto_annotation=hto_annotation,
+        hto_colormap=hto_colormap,
+        hto_min_percent=hto_min_percent,
+        hto_max_percent=hto_max_percent,
+        hto_min_value=hto_min_value,
+        hto_max_value=hto_max_value,
     )
 
 

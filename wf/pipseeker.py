@@ -1,9 +1,10 @@
 import subprocess
+
 from enum import Enum
 from pathlib import Path
 from typing import Optional
 
-from latch import medium_task, custom_task
+from latch import custom_task, medium_task
 from latch.types import LatchDir, LatchFile, LatchOutputDir
 import sys
 
@@ -18,6 +19,8 @@ class GenomeType(Enum):
 class Chemistry(Enum):
     v3 = "v3"
     v4 = "v4"
+    v5 = "v5"
+    pipcyte = "pipcyte"
 
 
 class Verbosity(Enum):
@@ -26,7 +29,8 @@ class Verbosity(Enum):
     two = "2"
 
 
-@custom_task(cpu=18, memory=60)
+# @custom_task(cpu=18, memory=60)
+@medium_task
 def pipseeker_task(
     fastq_directory: LatchDir,
     genome_source: str,
@@ -40,7 +44,6 @@ def pipseeker_task(
     save_svg: bool = True,
     dpi: int = 200,
     sorted_bam: bool = False,
-    # run_barnyard: bool = False,
     remove_bam: bool = True,
     downsample: Optional[int] = None,
     retain_barcoded_fastqs: bool = False,
@@ -49,11 +52,11 @@ def pipseeker_task(
     max_sensitivity: int = 5,
     force_cells: Optional[int] = None,
     run_barnyard: bool = False,
-    clustering_percent_genes: float = 10.0,
+    clustering_percent_genes: int = 10,
     diff_exp_genes: int = 50,
     principal_components: Optional[int] = None,
     nearest_neighbors: Optional[int] = None,
-    resolution: Optional[float] = None,
+    resolution: Optional[int] = None,
     clustering_sensitivity: str = "medium",
     min_clusters_kmeans: Optional[int] = None,
     max_clusters_kmeans: Optional[int] = None,
@@ -61,6 +64,24 @@ def pipseeker_task(
     annotation: Optional[LatchFile] = None,
     report_id: Optional[str] = None,
     report_description: Optional[str] = None,
+    adt_fastq: Optional[LatchFile] = None,
+    adt_tags: Optional[LatchFile] = None,
+    adt_position: int = 0,
+    adt_annotation: Optional[LatchFile] = None,
+    adt_colormap: str = "gray-to-green",
+    adt_min_percent: int = 1,
+    adt_max_percent: int = 99,
+    adt_min_value: Optional[int] = None,
+    adt_max_value: Optional[int] = None,
+    hto_fastq: Optional[LatchFile] = None,
+    hto_tags: Optional[LatchFile] = None,
+    hto_position: int = 0,
+    hto_annotation: Optional[LatchFile] = None,
+    hto_colormap: str = "gray-to-red",
+    hto_min_percent: int = 1,
+    hto_max_percent: int = 99,
+    hto_min_value: Optional[int] = None,
+    hto_max_value: Optional[int] = None,
 ) -> LatchOutputDir:
     print()
     print("Compiling reference genome")
@@ -81,7 +102,7 @@ def pipseeker_task(
         elif compiled_genome_reference == GenomeType.mouse:
             reference_zipped_p = LatchFile(
                 "s3://latch-public/test-data/18440/pipseeker-gex-reference-GRCm39-2022.04.tar.gz"
-            ).local_path  # Not uploaded to my test-data yet
+            ).local_path
             reference_p = Path("/root/pipseeker-gex-reference-GRCm39-2022.04")
 
             subprocess.run(
@@ -105,6 +126,12 @@ def pipseeker_task(
             f"{custom_genome_reference_gtf_p}",
             "--output-path",
             f"{reference_p}",
+            "--threads",
+            "0",
+            "--verbosity",
+            f"{verbosity.value}",
+            "--random-seed",
+            f"{random_seed}",
         ]  # Need more parameters here?
         subprocess.run(genome_compilation_cmd, check=True)
 
@@ -120,18 +147,16 @@ def pipseeker_task(
         "--star-index-path",
         f"{reference_p}",
         "--output-path",
-        str(local_output_dir),
+        f"{local_output_dir}",
         "--threads",
-        "16",
+        "0",
         "--chemistry",
-        str(chemistry.value),
+        f"{chemistry.value}",
         "--verbosity",
         f"{verbosity.value}",
         "--skip-version-check",
-        "--random_seed",
+        "--random-seed",
         f"{random_seed}",
-        "--save-svg",
-        f"{save_svg}",
         "--dpi",
         f"{dpi}",
         "--min-sensitivity",
@@ -145,21 +170,6 @@ def pipseeker_task(
         "--clustering-sensitivity",
         f"{clustering_sensitivity}",
     ]
-
-    if chemistry == Chemistry.v3:
-        pipseeker_cmd.extend(
-            [
-                "--annotation",
-                "/root/ref/human-pbmc-references/references/human-pbmc-v3.csv",  # fixed
-            ]
-        )
-    else:
-        pipseeker_cmd.extend(
-            [
-                "--annotation",
-                "/root/ref/human-pbmc-references/references/human-pbmc-v4.csv",  # fixed
-            ]
-        )
 
     if downsample is not None:
         pipseeker_cmd.extend(
@@ -183,7 +193,7 @@ def pipseeker_task(
                 f"{min_clusters_kmeans}",
             ]
         )
-    
+
     if max_clusters_kmeans is not None:
         pipseeker_cmd.extend(
             [
@@ -199,7 +209,7 @@ def pipseeker_task(
                 f"{annotation.local_path}",
             ]
         )
-    
+
     if report_id is not None:
         pipseeker_cmd.extend(
             [
@@ -215,6 +225,9 @@ def pipseeker_task(
                 f"{report_description}",
             ]
         )
+
+    if save_svg is True:
+        pipseeker_cmd.append("--save-svg")
 
     if retain_barcoded_fastqs is True:
         pipseeker_cmd.append("--retain-barcoded-fastqs")
@@ -234,24 +247,145 @@ def pipseeker_task(
     if umap_axes is True:
         pipseeker_cmd.append("--umap-axes")
 
-    if (principal_components is None) and (nearest_neighbors is None) and (resolution is None):
-        print("")
-    elif (principal_components is not None) and (nearest_neighbors is not None) and (resolution is not None):
+    parameters = [principal_components, nearest_neighbors, resolution]
+
+    if all(param is None for param in parameters) or all(
+        param is not None for param in parameters
+    ):
+        if all(param is not None for param in parameters):
+            pipseeker_cmd.extend(
+                [
+                    "--principal-components",
+                    f"{principal_components}",
+                    "--nearest-neighbors",
+                    f"{nearest_neighbors}",
+                    "--resolution",
+                    f"{resolution}",
+                ]
+            )
+    else:
+        print(
+            "--principal-components, --nearest-neighbors, and --resolution must all be used or omitted at the same time. "
+            "You cannot specify one argument and leave the others unspecified. "
+            "PIPseeker will run with none of the inputted values and assign these parameters automatically."
+        )
+
+    if adt_fastq is not None:
         pipseeker_cmd.extend(
             [
-                "--principal-components",
-                f"{principal_components}",
-                "--nearest-neighbors",
-                f"{nearest_neighbors}",
-                "--resolution",
-                f"{resolution}",
+                "--adt-fastq",
+                f"{adt_fastq.local_path}",
+                "--adt-position",
+                f"{adt_position}",
             ]
         )
-    else:
-        print("--principal-components, --nearest-neighbors and --resolution must all be used or omitted at the same time. \
-              You cannot specify one argument and leave the others unspecified.\
-              PIPseeker will run with none of the inputted values and assign these parameters automatically.")
-    
+
+        if adt_tags is not None:
+            pipseeker_cmd.extend(
+                [
+                    "--adt-tags",
+                    f"{adt_tags.local_path}",
+                ]
+            )
+
+        if adt_annotation is not None:
+            pipseeker_cmd.extend(
+                [
+                    "--adt-annotation",
+                    f"{adt_annotation.local_path}",
+                ]
+            )
+
+        if adt_colormap is not None:
+            pipseeker_cmd.extend(
+                [
+                    "--adt-colormap",
+                    f"{adt_colormap}",
+                ]
+            )
+
+        if (adt_min_value is not None) and (adt_max_value is not None):
+            pipseeker_cmd.extend(
+                [
+                    "--adt-min-value",
+                    f"{adt_min_value}",
+                    "--adt-max-value",
+                    f"{adt_max_value}",
+                ]
+            )
+
+        elif (adt_min_value is None) and (adt_max_value is None):
+            pipseeker_cmd.extend(
+                [
+                    "--adt-min-percent",
+                    f"{adt_min_percent}",
+                    "--adt-max-percent",
+                    f"{adt_max_percent}",
+                ]
+            )
+        else:
+            print(
+                "Scalars and percentile ranks for ADT feature plots cannot be used together in the same analysis"
+            )
+
+    if hto_fastq is not None:
+        pipseeker_cmd.extend(
+            [
+                "--hto-fastq",
+                f"{hto_fastq.local_path}",
+                "--hto-position",
+                f"{hto_position}",
+            ]
+        )
+
+        if hto_tags is not None:
+            pipseeker_cmd.extend(
+                [
+                    "--hto-tags",
+                    f"{hto_tags.local_path}",
+                ]
+            )
+
+        if hto_annotation is not None:
+            pipseeker_cmd.extend(
+                [
+                    "--hto-annotation",
+                    f"{hto_annotation.local_path}",
+                ]
+            )
+
+        if hto_colormap is not None:
+            pipseeker_cmd.extend(
+                [
+                    "--hto-colormap",
+                    f"{hto_colormap}",
+                ]
+            )
+
+        if (hto_min_value is not None) and (hto_max_value is not None):
+            pipseeker_cmd.extend(
+                [
+                    "--hto-min-value",
+                    f"{hto_min_value}",
+                    "--hto-max-value",
+                    f"{hto_max_value}",
+                ]
+            )
+
+        elif (hto_min_value is None) and (hto_max_value is None):
+            pipseeker_cmd.extend(
+                [
+                    "--hto-min-percent",
+                    f"{hto_min_percent}",
+                    "--hto-max-percent",
+                    f"{hto_max_percent}",
+                ]
+            )
+        else:
+            print(
+                "Scalars and percentile ranks for HTO feature plots cannot be used together in the same analysis"
+            )
+
     print()
     print(f'Running {" ".join(pipseeker_cmd)}')
     subprocess.run(pipseeker_cmd, check=True)
