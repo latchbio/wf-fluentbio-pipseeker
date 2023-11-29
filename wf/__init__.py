@@ -24,7 +24,7 @@ metadata = LatchMetadata(
     author=LatchAuthor(
         name="LatchBio",
     ),
-    repository="github.com/latchbio/pipseeker",
+    repository="https://github.com/latchbio/wf-fluentbio-pipseeker",
     license="MIT",
     parameters={
         "fastq_directory": LatchParameter(
