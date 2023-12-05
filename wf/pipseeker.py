@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 from latch import custom_task, medium_task
+from latch.functions.messages import message
 from latch.types import LatchDir, LatchFile, LatchOutputDir
 import sys
 
@@ -14,6 +15,10 @@ sys.stdout.reconfigure(line_buffering=True)
 class GenomeType(Enum):
     human = "Human"
     mouse = "Mouse"
+    human_mouse = "Human and Mouse"
+    drosophilia = "Drosophilia"
+    zebrafish = "Zebrafish"
+    arabidopsis_thaliana = "Arabidopsis thaliana"
 
 
 class Chemistry(Enum):
@@ -35,13 +40,21 @@ def pipseeker_task(
     fastq_directory: LatchDir,
     genome_source: str,
     compiled_genome_reference: GenomeType,
+    custom_compiled_genome: Optional[LatchDir],
+    custom_compiled_genome_zipped: Optional[LatchFile],
     custom_genome_reference_fasta: LatchFile,
     custom_genome_reference_gtf: LatchFile,
+    include_types: Optional[str] = None,
+    exclude_types: Optional[str] = None,
+    biotype_tag: Optional[str] = None,
+    read_length: Optional[int] = 100,
+    sparsity: Optional[int] = 3,
+    additional_params_buildmapref: Optional[str] = None,
     chemistry: Chemistry = Chemistry.v4,
     output_directory: LatchOutputDir = LatchOutputDir("latch:///PIPseeker_Output"),
     verbosity: Verbosity = Verbosity.two,
     random_seed: int = 0,
-    save_svg: bool = True,
+    save_svg: bool = False,
     dpi: int = 200,
     sorted_bam: bool = False,
     remove_bam: bool = True,
@@ -111,8 +124,76 @@ def pipseeker_task(
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
+        elif compiled_genome_reference == GenomeType.human_mouse:
+            reference_zipped_p = LatchFile(
+                "s3://latch-public/test-data/18440/pipseeker-gex-reference-GRCh38-and-GRCm39-2022.04.tar.gz"
+            ).local_path
+            reference_p = Path(
+                "/root/pipseeker-gex-reference-GRCh38-and-GRCm39-2022.04.tar.gz"
+            )
 
-    elif genome_source == "custom":
+            subprocess.run(
+                ["tar", "-zxvf", f"{reference_zipped_p}", "-C", "/root"],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        elif compiled_genome_reference == GenomeType.drosophilia:
+            reference_zipped_p = LatchFile(
+                "s3://latch-public/test-data/18440/pipseeker-gex-reference-dm-flybase-r6-v47-2022.09.tar.gz"
+            ).local_path
+            reference_p = Path(
+                "/root/pipseeker-gex-reference-dm-flybase-r6-v47-2022.09.tar.gz"
+            )
+
+            subprocess.run(
+                ["tar", "-zxvf", f"{reference_zipped_p}", "-C", "/root"],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        elif compiled_genome_reference == GenomeType.zebrafish:
+            reference_zipped_p = LatchFile(
+                "s3://latch-public/test-data/18440/zebrafish_danio_rerio_GRCz11_r110_2023.08.tar.gz"
+            ).local_path
+            reference_p = Path("/root/zebrafish_danio_rerio_GRCz11_r110_2023.08.tar.gz")
+
+            subprocess.run(
+                ["tar", "-zxvf", f"{reference_zipped_p}", "-C", "/root"],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        elif compiled_genome_reference == GenomeType.arabidopsis_thaliana:
+            reference_zipped_p = LatchFile(
+                "s3://latch-public/test-data/18440/pipseeker-gex-reference-arabidopsis-thaliana-TAIR10.55-protein-coding-2023.02.tar.gz"
+            ).local_path
+            reference_p = Path(
+                "/root/pipseeker-gex-reference-arabidopsis-thaliana-TAIR10.55-protein-coding-2023.02.tar.gz"
+            )
+
+            subprocess.run(
+                ["tar", "-zxvf", f"{reference_zipped_p}", "-C", "/root"],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+
+    elif genome_source == "custom_compiled":
+        if custom_compiled_genome is not None:
+            reference_p = Path(custom_compiled_genome)
+        elif custom_compiled_genome_zipped is not None:
+            reference_zipped_p = Path(custom_compiled_genome_zipped)
+            reference_p = Path(f"/root/{reference_zipped_p.stem}").with_suffix("")
+
+            subprocess.run(
+                ["tar", "-zxvf", f"{reference_zipped_p}", "-C", "/root"],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+
+    elif genome_source == "custom_build":
         custom_genome_reference_gtf_p = Path(custom_genome_reference_gtf)
         custom_genome_reference_fasta_p = Path(custom_genome_reference_fasta)
         reference_p = Path("/root/genome_ref")
@@ -132,7 +213,53 @@ def pipseeker_task(
             f"{verbosity.value}",
             "--random-seed",
             f"{random_seed}",
-        ]  # Need more parameters here?
+            "--read-length",
+            f"{read_length}",
+            "--sparsity",
+            f"{sparsity}",
+        ]
+
+        if include_types is not None and exclude_types is None:
+            genome_compilation_cmd.extend(
+                [
+                    "--include-types",
+                    f"{include_types}",
+                ]
+            )
+            if biotype_tag is not None:
+                genome_compilation_cmd.extend(
+                    [
+                        "--biotype-tag",
+                        f"{biotype_tag}",
+                    ]
+                )
+        elif exclude_types is not None and include_types is None:
+            genome_compilation_cmd.extend(
+                [
+                    "--exclude-types",
+                    f"{exclude_types}",
+                ]
+            )
+            if biotype_tag is not None:
+                genome_compilation_cmd.extend(
+                    [
+                        "--biotype-tag",
+                        f"{biotype_tag}",
+                    ]
+                )
+        elif exclude_types is not None and include_types is not None:
+            message(
+                typ="warning",
+                data={
+                    "title": "PIPseeker buildmapref parameters warning",
+                    "body": "Only one of exclude_types and include_types can be used.",
+                },
+            )
+
+        if additional_params_buildmapref is not None:
+            additional_params_list = additional_params_buildmapref.split()
+            genome_compilation_cmd.extend(additional_params_list)
+
         subprocess.run(genome_compilation_cmd, check=True)
 
     print()
@@ -264,10 +391,14 @@ def pipseeker_task(
                 ]
             )
     else:
-        print(
-            "--principal-components, --nearest-neighbors, and --resolution must all be used or omitted at the same time. "
-            "You cannot specify one argument and leave the others unspecified. "
-            "PIPseeker will run with none of the inputted values and assign these parameters automatically."
+        message(
+            typ="warning",
+            data={
+                "title": "PIPseeker parameters warning",
+                "body": "--principal-components, --nearest-neighbors, and --resolution must all be used or omitted at the same time. "
+                "You cannot specify one argument and leave the others unspecified. "
+                "PIPseeker will run with none of the inputted values and assign these parameters automatically.",
+            },
         )
 
     if adt_fastq is not None:
@@ -324,8 +455,12 @@ def pipseeker_task(
                 ]
             )
         else:
-            print(
-                "Scalars and percentile ranks for ADT feature plots cannot be used together in the same analysis"
+            message(
+                typ="warning",
+                data={
+                    "title": "PIPseeker parameters warning",
+                    "body": "Scalars and percentile ranks for ADT feature plots cannot be used together in the same analysis",
+                },
             )
 
     if hto_fastq is not None:
@@ -382,13 +517,21 @@ def pipseeker_task(
                 ]
             )
         else:
-            print(
-                "Scalars and percentile ranks for HTO feature plots cannot be used together in the same analysis"
+            message(
+                typ="warning",
+                data={
+                    "title": "PIPseeker parameters warning",
+                    "body": "Scalars and percentile ranks for HTO feature plots cannot be used together in the same analysis",
+                },
             )
 
     print()
     print(f'Running {" ".join(pipseeker_cmd)}')
     subprocess.run(pipseeker_cmd, check=True)
+
+    if genome_source == "custom_build":
+        print("Moving custom built genome")
+        reference_p.rename(local_output_dir / reference_p.name)
 
     print()
     print("Uploading results")

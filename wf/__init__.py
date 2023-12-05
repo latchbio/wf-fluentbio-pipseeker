@@ -13,13 +13,14 @@ from latch.types import (
     Fork,
     ForkBranch,
     Spoiler,
+    Text,
 )
 from latch.resources.launch_plan import LaunchPlan
 
 from wf.pipseeker import *
 
 metadata = LatchMetadata(
-    display_name="Fluent BioSciences PIPseeker",
+    display_name="Fluent BioSciences PIPseeker v3.0.5",
     documentation="",
     author=LatchAuthor(
         name="LatchBio",
@@ -38,6 +39,16 @@ metadata = LatchMetadata(
             description="Reference genome to be used",
             batch_table_column=True,
         ),
+        "custom_compiled_genome_zipped": LatchParameter(
+            display_name="Zipped Compiled Custom Genome",
+            description="Zipped (tar.gz) file of custom compiled PIPseeker genome",
+            batch_table_column=True,
+        ),
+        "custom_compiled_genome": LatchParameter(
+            display_name="Unzipped Compiled Custom Genome",
+            description="Directory with custom compiled PIPseeker genome",
+            batch_table_column=True,
+        ),
         "custom_genome_reference_fasta": LatchParameter(
             display_name="Genome FASTA",
             description="Reference genome FASTA to be used",
@@ -46,6 +57,36 @@ metadata = LatchMetadata(
         "custom_genome_reference_gtf": LatchParameter(
             display_name="Genome GTF",
             description="Reference genome GTF to be used",
+            batch_table_column=True,
+        ),
+        "include_types": LatchParameter(
+            display_name="Include Types",
+            description="Comma-separated list of biotypes to include or exclude from the reference. Only one of these arguments can be used. If neither is specified, all biotypes will be included.",
+            batch_table_column=True,
+        ),
+        "exclude_types": LatchParameter(
+            display_name="Exclude Types",
+            description="Comma-separated list of biotypes to include or exclude from the reference. Only one of these arguments can be used. If neither is specified, all biotypes will be included.",
+            batch_table_column=True,
+        ),
+        "biotype_tag": LatchParameter(
+            display_name="Biotype Tag",
+            description="Tag in the GTF file to use for determining biotype. Only use in conjunction with --include-biotypes or --exclude-biotypes when explicitly specifying biotypes.",
+            batch_table_column=True,
+        ),
+        "read_length": LatchParameter(
+            display_name="Read Length",
+            description="Expected length of read 2. This is used to adjust STARs sjdbOverhang parameter.",
+            batch_table_column=True,
+        ),
+        "sparsity": LatchParameter(
+            display_name="Sparsity",
+            description="Sparsity of suffix array. This is used to adjust STARs genomeSAsparseD parameter. Lower values will result in faster performance at the expense of bigger reference files and higher memory consumption.",
+            batch_table_column=True,
+        ),
+        "additional_params_buildmapref": LatchParameter(
+            display_name="Additional Parameters",
+            description="Additional STAR command-line parameters in the form: --<name> <value>. Input the entire set of parameter names and values as a single string.",
             batch_table_column=True,
         ),
         "chemistry": LatchParameter(
@@ -244,11 +285,30 @@ metadata = LatchMetadata(
                         "compiled_genome_reference",
                     ),
                 ),
-                custom=ForkBranch(
-                    "Custom Reference Genome",
+                custom_compiled=ForkBranch(
+                    "Precompiled Custom Reference Genome",
+                    Text("Choose one of the following:"),
+                    Params(
+                        "custom_compiled_genome_zipped",
+                        "custom_compiled_genome",
+                    ),
+                ),
+                custom_build=ForkBranch(
+                    "Generate Custom Reference Genome",
                     Params(
                         "custom_genome_reference_fasta",
                         "custom_genome_reference_gtf",
+                    ),
+                    Spoiler(
+                        "Additional Parameters",
+                        Params(
+                            "include_types",
+                            "exclude_types",
+                            "biotype_tag",
+                            "read_length",
+                            "sparsity",
+                            "additional_params_buildmapref",
+                        ),
                     ),
                 ),
             ),
@@ -364,17 +424,25 @@ def pipseeker_wf(
     fastq_directory: LatchDir,
     genome_source: str,
     compiled_genome_reference: GenomeType,
+    custom_compiled_genome: Optional[LatchDir],
+    custom_compiled_genome_zipped: Optional[LatchFile],
     custom_genome_reference_fasta: LatchFile,
     custom_genome_reference_gtf: LatchFile,
+    include_types: Optional[str] = None,
+    exclude_types: Optional[str] = None,
+    biotype_tag: Optional[str] = None,
+    read_length: Optional[int] = 100,
+    sparsity: Optional[int] = 3,
+    additional_params_buildmapref: Optional[str] = None,
     chemistry: Chemistry = Chemistry.v4,
     output_directory: LatchOutputDir = LatchOutputDir("latch:///PIPseeker_Output"),
     verbosity: Verbosity = Verbosity.two,
     random_seed: int = 0,
-    save_svg: bool = True,
+    save_svg: bool = False,
     dpi: int = 200,
     downsample: Optional[int] = None,
     retain_barcoded_fastqs: bool = False,
-    sorted_bam: bool = True,
+    sorted_bam: bool = False,
     remove_bam: bool = False,
     exons_only: bool = False,
     min_sensitivity: int = 1,
@@ -416,7 +484,7 @@ def pipseeker_wf(
 
     # Fluent BioSciences PIPseeker
 
-    PIPseeker analyzes single-cell RNA data obtained with [Fluent BioSciences](https://www.fluentbio.com/) proprietary PIPseq™ 3 Single Cell RNA (scRNA-seq) Kits.
+    PIPseeker analyzes single-cell RNA data obtained with [Fluent BioSciences](https://www.fluentbio.com/products/pipseeker-software-for-data-analysis/) proprietary PIPseq™ 3 Single Cell RNA (scRNA-seq) Kits.
 
     PIPseeker offers a comprehensive analysis solution that provides the user with detailed metrics, gene expression profiles, basic cell quality and clustering indicators, and cell type annotation for some sample types.
     The outputs of PIPseeker can then be used for subsequent, specialized tertiary analysis streams.
@@ -429,8 +497,16 @@ def pipseeker_wf(
         chemistry=chemistry,
         genome_source=genome_source,
         compiled_genome_reference=compiled_genome_reference,
+        custom_compiled_genome=custom_compiled_genome,
+        custom_compiled_genome_zipped=custom_compiled_genome_zipped,
         custom_genome_reference_fasta=custom_genome_reference_fasta,
         custom_genome_reference_gtf=custom_genome_reference_gtf,
+        include_types=include_types,
+        exclude_types=exclude_types,
+        biotype_tag=biotype_tag,
+        read_length=read_length,
+        sparsity=sparsity,
+        additional_params_buildmapref=additional_params_buildmapref,
         output_directory=output_directory,
         sorted_bam=sorted_bam,
         verbosity=verbosity,
@@ -484,9 +560,7 @@ LaunchPlan(
     {
         "fastq_directory": LatchDir("s3://latch-public/test-data/18440/sample1"),
         "chemistry": Chemistry.v4,
-        "sorted_bam": True,
-        "output_directory": LatchOutputDir("latch:///PIPseeker_Output/Sample1")
-        # "verbosity": Verbosity.two,
+        "output_directory": LatchOutputDir("latch:///PIPseeker_Output/Sample1"),
     },
 )
 
@@ -496,8 +570,6 @@ LaunchPlan(
     {
         "fastq_directory": LatchDir("s3://latch-public/test-data/18440/sample2"),
         "chemistry": Chemistry.v4,
-        "sorted_bam": True,
-        "output_directory": LatchOutputDir("latch:///PIPseeker_Output/Sample2")
-        # "verbosity": Verbosity.two,
+        "output_directory": LatchOutputDir("latch:///PIPseeker_Output/Sample2"),
     },
 )
