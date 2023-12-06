@@ -14,6 +14,7 @@ from latch.types import (
     ForkBranch,
     Spoiler,
     Text,
+    LatchAppearanceType,
 )
 from latch.resources.launch_plan import LaunchPlan
 
@@ -40,12 +41,14 @@ metadata = LatchMetadata(
             batch_table_column=True,
         ),
         "custom_compiled_genome_zipped": LatchParameter(
-            display_name="Zipped Compiled Custom Genome",
+            display_name="Zipped Compiled Custom Genome (.tar.gz or .zip)",
+            placeholder=".tar.gz or .zip zipped file",
             description="Zipped (tar.gz) file of custom compiled PIPseeker genome",
             batch_table_column=True,
         ),
         "custom_compiled_genome": LatchParameter(
-            display_name="Unzipped Compiled Custom Genome",
+            display_name="Unzipped Compiled Custom Genome Directory",
+            placeholder="Unzipped directory with custom compiled PIPseeker genome",
             description="Directory with custom compiled PIPseeker genome",
             batch_table_column=True,
         ),

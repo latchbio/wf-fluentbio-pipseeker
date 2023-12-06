@@ -23,6 +23,8 @@ run curl -L https://fbs-public.s3.us-east-2.amazonaws.com/public-pipseeker-relea
     tar -xzvf pipseeker-v3.0.5-linux.tar.gz &&\
     mv pipseeker-v3.0.5-linux/pipseeker /bin/
 
+run apt-get install unzip
+
 # Latch SDK
 # DO NOT REMOVE
 run pip install latch==2.36.10

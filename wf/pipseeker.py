@@ -186,12 +186,20 @@ def pipseeker_task(
             reference_zipped_p = Path(custom_compiled_genome_zipped)
             reference_p = Path(f"/root/{reference_zipped_p.stem}").with_suffix("")
 
-            subprocess.run(
-                ["tar", "-zxvf", f"{reference_zipped_p}", "-C", "/root"],
-                check=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
+            if reference_zipped_p.suffixes[-2:] == [".tar", ".gz"]:
+                subprocess.run(
+                    ["tar", "-zxvf", str(reference_zipped_p), "-C", "/root"],
+                    check=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+            elif reference_zipped_p.suffix == ".zip":
+                subprocess.run(
+                    ["unzip", "-o", str(reference_zipped_p), "-d", "/root"],
+                    check=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
 
     elif genome_source == "custom_build":
         custom_genome_reference_gtf_p = Path(custom_genome_reference_gtf)
