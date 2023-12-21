@@ -34,8 +34,8 @@ class Verbosity(Enum):
     two = "2"
 
 
-# @custom_task(cpu=18, memory=60)
-@medium_task
+@custom_task(cpu=18, memory=190, storage_gib=500)
+# @medium_task
 def pipseeker_task(
     fastq_directory: LatchDir,
     genome_source: str,
@@ -129,7 +129,7 @@ def pipseeker_task(
                 "s3://latch-public/test-data/18440/pipseeker-gex-reference-GRCh38-and-GRCm39-2022.04.tar.gz"
             ).local_path
             reference_p = Path(
-                "/root/pipseeker-gex-reference-GRCh38-and-GRCm39-2022.04.tar.gz"
+                "/root/pipseeker-gex-reference-GRCh38-and-GRCm39-2022.04"
             )
 
             subprocess.run(
@@ -143,7 +143,7 @@ def pipseeker_task(
                 "s3://latch-public/test-data/18440/pipseeker-gex-reference-dm-flybase-r6-v47-2022.09.tar.gz"
             ).local_path
             reference_p = Path(
-                "/root/pipseeker-gex-reference-dm-flybase-r6-v47-2022.09.tar.gz"
+                "/root/pipseeker-gex-reference-dm-flybase-r6-v47-2022.09"
             )
 
             subprocess.run(
@@ -156,7 +156,7 @@ def pipseeker_task(
             reference_zipped_p = LatchFile(
                 "s3://latch-public/test-data/18440/zebrafish_danio_rerio_GRCz11_r110_2023.08.tar.gz"
             ).local_path
-            reference_p = Path("/root/zebrafish_danio_rerio_GRCz11_r110_2023.08.tar.gz")
+            reference_p = Path("/root/zebrafish_danio_rerio_GRCz11_r110_2023.08")
 
             subprocess.run(
                 ["tar", "-zxvf", f"{reference_zipped_p}", "-C", "/root"],
@@ -169,7 +169,7 @@ def pipseeker_task(
                 "s3://latch-public/test-data/18440/pipseeker-gex-reference-arabidopsis-thaliana-TAIR10.55-protein-coding-2023.02.tar.gz"
             ).local_path
             reference_p = Path(
-                "/root/pipseeker-gex-reference-arabidopsis-thaliana-TAIR10.55-protein-coding-2023.02.tar.gz"
+                "/root/pipseeker-gex-reference-arabidopsis-thaliana-TAIR10.55-protein-coding-2023.02"
             )
 
             subprocess.run(
