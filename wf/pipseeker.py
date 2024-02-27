@@ -97,7 +97,7 @@ def pipseeker_task(
     hto_max_value: Optional[int] = None,
 ) -> LatchOutputDir:
     print()
-    print("Compiling reference genome")
+    print("Downloading and unpacking reference genome")
 
     if genome_source == "compiled":
         if compiled_genome_reference == GenomeType.human:
