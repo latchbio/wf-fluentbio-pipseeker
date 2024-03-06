@@ -179,6 +179,7 @@ def pipseeker_task(
                 stderr=subprocess.DEVNULL,
             )
 
+    # Using a custom prebuilt mapping reference.
     elif genome_source == "custom_compiled":
         if custom_compiled_genome is not None:
             reference_p = Path(custom_compiled_genome)
@@ -201,6 +202,7 @@ def pipseeker_task(
                     stderr=subprocess.DEVNULL,
                 )
 
+    # PIPseeker buildmapref mode.
     elif genome_source == "custom_build":
         custom_genome_reference_gtf_p = Path(custom_genome_reference_gtf)
         custom_genome_reference_fasta_p = Path(custom_genome_reference_fasta)

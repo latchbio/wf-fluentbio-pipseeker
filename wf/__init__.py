@@ -21,7 +21,7 @@ from latch.resources.launch_plan import LaunchPlan
 from wf.pipseeker import *
 
 metadata = LatchMetadata(
-    display_name="Fluent BioSciences PIPseeker v3.0.5",
+    display_name="Fluent BioSciences PIPseeker v3.1.3",
     documentation="",
     author=LatchAuthor(
         name="LatchBio",
