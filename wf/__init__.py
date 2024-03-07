@@ -196,40 +196,40 @@ metadata = LatchMetadata(
             display_name="Report Description",
             batch_table_column=True,
         ),
-        "adt_fastq": LatchParameter(
-            display_name="ADT FASTQ Path",
+        "snt_fastq": LatchParameter(
+            display_name="SNT FASTQ Path",
             batch_table_column=True,
         ),
-        "adt_tags": LatchParameter(
-            display_name="ADT Tags path",
+        "snt_tags": LatchParameter(
+            display_name="SNT Tags path",
             batch_table_column=True,
         ),
-        "adt_position": LatchParameter(
-            display_name="ADT Position",
+        "snt_position": LatchParameter(
+            display_name="SNT Position",
             batch_table_column=True,
         ),
-        "adt_annotation": LatchParameter(
-            display_name="ADT Annotation",
+        "snt_annotation": LatchParameter(
+            display_name="SNT Annotation",
             batch_table_column=True,
         ),
-        "adt_colormap": LatchParameter(
-            display_name="ADT Colormap",
+        "snt_colormap": LatchParameter(
+            display_name="SNT Colormap",
             batch_table_column=True,
         ),
-        "adt_min_percent": LatchParameter(
-            display_name="ADT Min Percent",
+        "snt_min_percent": LatchParameter(
+            display_name="SNT Min Percent",
             batch_table_column=True,
         ),
-        "adt_max_percent": LatchParameter(
-            display_name="ADT Max Percent",
+        "snt_max_percent": LatchParameter(
+            display_name="SNT Max Percent",
             batch_table_column=True,
         ),
-        "adt_min_value": LatchParameter(
-            display_name="ADT Min Value",
+        "snt_min_value": LatchParameter(
+            display_name="SNT Min Value",
             batch_table_column=True,
         ),
-        "adt_max_value": LatchParameter(
-            display_name="ADT Max Value",
+        "snt_max_value": LatchParameter(
+            display_name="SNT Max Value",
             batch_table_column=True,
         ),
         "hto_fastq": LatchParameter(
@@ -266,6 +266,10 @@ metadata = LatchMetadata(
         ),
         "hto_max_value": LatchParameter(
             display_name="HTO Max Value",
+            batch_table_column=True,
+        ),
+        "hto_colorbar": LatchParameter(
+            display_name="HTO Colorbar",
             batch_table_column=True,
         ),
         "output_directory": LatchParameter(
@@ -390,17 +394,17 @@ metadata = LatchMetadata(
                 ),
             ),
             Section(
-                "ADT",
+                "SNT",
                 Params(
-                    "adt_fastq",
-                    "adt_tags",
-                    "adt_position",
-                    "adt_annotation",
-                    "adt_colormap",
-                    "adt_min_percent",
-                    "adt_max_percent",
-                    "adt_min_value",
-                    "adt_max_value",
+                    "snt_fastq",
+                    "snt_tags",
+                    "snt_position",
+                    "snt_annotation",
+                    "snt_colormap",
+                    "snt_min_percent",
+                    "snt_max_percent",
+                    "snt_min_value",
+                    "snt_max_value",
                 ),
             ),
             Section(
@@ -415,6 +419,7 @@ metadata = LatchMetadata(
                     "hto_max_percent",
                     "hto_min_value",
                     "hto_max_value",
+                    "hto_colorbar",
                 ),
             ),
         ),
@@ -464,15 +469,15 @@ def pipseeker_wf(
     annotation: Optional[LatchFile] = None,
     report_id: Optional[str] = None,
     report_description: Optional[str] = None,
-    adt_fastq: Optional[LatchFile] = None,
-    adt_tags: Optional[LatchFile] = None,
-    adt_position: int = 0,
-    adt_annotation: Optional[LatchFile] = None,
-    adt_colormap: str = "gray-to-green",
-    adt_min_percent: int = 1,
-    adt_max_percent: int = 99,
-    adt_min_value: Optional[int] = None,
-    adt_max_value: Optional[int] = None,
+    snt_fastq: Optional[LatchFile] = None,
+    snt_tags: Optional[LatchFile] = None,
+    snt_position: int = 0,
+    snt_annotation: Optional[LatchFile] = None,
+    snt_colormap: str = "gray-to-green",
+    snt_min_percent: int = 1,
+    snt_max_percent: int = 99,
+    snt_min_value: Optional[int] = None,
+    snt_max_value: Optional[int] = None,
     hto_fastq: Optional[LatchFile] = None,
     hto_tags: Optional[LatchFile] = None,
     hto_position: int = 0,
@@ -491,7 +496,7 @@ def pipseeker_wf(
 
     PIPseeker offers a comprehensive analysis solution that provides the user with detailed metrics, gene expression profiles, basic cell quality and clustering indicators, and cell type annotation for some sample types.
     The outputs of PIPseeker can then be used for subsequent, specialized tertiary analysis streams.
-    PIPseeker also supports specialized applications like measuring surface protein levels using antibody-derived tags (ADTs) and cell hashing using hashtag oligonucleotides (HTOs).
+    PIPseeker also supports specialized applications like measuring surface protein levels using antibody-derived tags (SNTs) and cell hashing using hashtag oligonucleotides (HTOs).
 
     """
 
@@ -536,15 +541,15 @@ def pipseeker_wf(
         annotation=annotation,
         report_id=report_id,
         report_description=report_description,
-        adt_fastq=adt_fastq,
-        adt_tags=adt_tags,
-        adt_position=adt_position,
-        adt_annotation=adt_annotation,
-        adt_colormap=adt_colormap,
-        adt_min_percent=adt_min_percent,
-        adt_max_percent=adt_max_percent,
-        adt_min_value=adt_min_value,
-        adt_max_value=adt_max_value,
+        snt_fastq=snt_fastq,
+        snt_tags=snt_tags,
+        snt_position=snt_position,
+        snt_annotation=snt_annotation,
+        snt_colormap=snt_colormap,
+        snt_min_percent=snt_min_percent,
+        snt_max_percent=snt_max_percent,
+        snt_min_value=snt_min_value,
+        snt_max_value=snt_max_value,
         hto_fastq=hto_fastq,
         hto_tags=hto_tags,
         hto_position=hto_position,

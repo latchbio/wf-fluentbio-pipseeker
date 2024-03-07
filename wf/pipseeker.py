@@ -77,15 +77,15 @@ def pipseeker_task(
     annotation: Optional[LatchFile] = None,
     report_id: Optional[str] = None,
     report_description: Optional[str] = None,
-    adt_fastq: Optional[LatchFile] = None,
-    adt_tags: Optional[LatchFile] = None,
-    adt_position: int = 0,
-    adt_annotation: Optional[LatchFile] = None,
-    adt_colormap: str = "gray-to-green",
-    adt_min_percent: int = 1,
-    adt_max_percent: int = 99,
-    adt_min_value: Optional[int] = None,
-    adt_max_value: Optional[int] = None,
+    snt_fastq: Optional[LatchFile] = None,
+    snt_tags: Optional[LatchFile] = None,
+    snt_position: int = 0,
+    snt_annotation: Optional[LatchFile] = None,
+    snt_colormap: str = "gray-to-green",
+    snt_min_percent: int = 1,
+    snt_max_percent: int = 99,
+    snt_min_value: Optional[int] = None,
+    snt_max_value: Optional[int] = None,
     hto_fastq: Optional[LatchFile] = None,
     hto_tags: Optional[LatchFile] = None,
     hto_position: int = 0,
@@ -411,57 +411,57 @@ def pipseeker_task(
             },
         )
 
-    if adt_fastq is not None:
+    if snt_fastq is not None:
         pipseeker_cmd.extend(
             [
-                "--adt-fastq",
-                f"{adt_fastq.local_path}",
-                "--adt-position",
-                f"{adt_position}",
+                "--snt-fastq",
+                f"{snt_fastq.local_path}",
+                "--snt-position",
+                f"{snt_position}",
             ]
         )
 
-        if adt_tags is not None:
+        if snt_tags is not None:
             pipseeker_cmd.extend(
                 [
-                    "--adt-tags",
-                    f"{adt_tags.local_path}",
+                    "--snt-tags",
+                    f"{snt_tags.local_path}",
                 ]
             )
 
-        if adt_annotation is not None:
+        if snt_annotation is not None:
             pipseeker_cmd.extend(
                 [
-                    "--adt-annotation",
-                    f"{adt_annotation.local_path}",
+                    "--snt-annotation",
+                    f"{snt_annotation.local_path}",
                 ]
             )
 
-        if adt_colormap is not None:
+        if snt_colormap is not None:
             pipseeker_cmd.extend(
                 [
-                    "--adt-colormap",
-                    f"{adt_colormap}",
+                    "--snt-colormap",
+                    f"{snt_colormap}",
                 ]
             )
 
-        if (adt_min_value is not None) and (adt_max_value is not None):
+        if (snt_min_value is not None) and (snt_max_value is not None):
             pipseeker_cmd.extend(
                 [
-                    "--adt-min-value",
-                    f"{adt_min_value}",
-                    "--adt-max-value",
-                    f"{adt_max_value}",
+                    "--snt-min-value",
+                    f"{snt_min_value}",
+                    "--snt-max-value",
+                    f"{snt_max_value}",
                 ]
             )
 
-        elif (adt_min_value is None) and (adt_max_value is None):
+        elif (snt_min_value is None) and (snt_max_value is None):
             pipseeker_cmd.extend(
                 [
-                    "--adt-min-percent",
-                    f"{adt_min_percent}",
-                    "--adt-max-percent",
-                    f"{adt_max_percent}",
+                    "--snt-min-percent",
+                    f"{snt_min_percent}",
+                    "--snt-max-percent",
+                    f"{snt_max_percent}",
                 ]
             )
         else:
@@ -469,7 +469,7 @@ def pipseeker_task(
                 typ="warning",
                 data={
                     "title": "PIPseeker parameters warning",
-                    "body": "Scalars and percentile ranks for ADT feature plots cannot be used together in the same analysis",
+                    "body": "Scalars and percentile ranks for SNT feature plots cannot be used together in the same analysis",
                 },
             )
 
