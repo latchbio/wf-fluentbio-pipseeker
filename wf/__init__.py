@@ -21,14 +21,48 @@ from latch.resources.launch_plan import LaunchPlan
 from wf.pipseeker import *
 
 metadata = LatchMetadata(
+    display_name='test',
+    parameters={},
+    flow=[Section(
+            "Options",
+            Fork(
+                "genome_source",
+                "",
+                full_mode=ForkBranch(
+                    "Full Mode",
+                    Params(
+                        "compiled_genome_reference",
+                    ),
+                ),
+                cells_mode=ForkBranch(
+                    "Precompiled Custom Reference Genome",
+                    Text("Choose one of the following:"),
+                    Params(
+                        "custom_compiled_genome_zipped",
+                        "custom_compiled_genome",
+                        ),
+                    ),
+                ),
+            ),
+        ]
+    )
+
+
+metadata = LatchMetadata(
     display_name="Fluent BioSciences PIPseeker v3.1.3",
     documentation="",
     author=LatchAuthor(
-        name="LatchBio",
+        name="Fluent BioSciences",
     ),
     repository="https://github.com/latchbio/wf-fluentbio-pipseeker",
     license="MIT",
     parameters={
+            "pipseeker_mode": LatchParameter(
+            display_name='PIPseeker Mode',
+            description="full mode (standard runs), "
+                        "cells mode (rerunning cell calling from existing output), "
+                        "or buildmapref (building a custom mapping reference)"
+        ),
         "fastq_directory": LatchParameter(
             display_name="FASTQ Directory",
             description="Directory of input FASTQ files. All FASTQ files in the directory will be used.",
@@ -88,7 +122,7 @@ metadata = LatchMetadata(
             batch_table_column=True,
         ),
         "additional_params_buildmapref": LatchParameter(
-            display_name="Additional Parameters",
+            display_name="Additional STAR Parameters",
             description="Additional STAR command-line parameters in the form: --<name> <value>. Input the entire set of parameter names and values as a single string.",
             batch_table_column=True,
         ),
@@ -307,7 +341,7 @@ metadata = LatchMetadata(
                         "custom_genome_reference_gtf",
                     ),
                     Spoiler(
-                        "Additional Parameters",
+                        "`buildmapref` Additional Parameters",
                         Params(
                             "include_types",
                             "exclude_types",
@@ -320,109 +354,113 @@ metadata = LatchMetadata(
                 ),
             ),
             Params("output_directory"),
+
+            Spoiler(
+                "`full` Mode Additional Parameters",
+
+                Section(
+                    "General",
+                    Params(
+                        "verbosity",
+                        "random_seed",
+                        "dpi",
+                        "save_svg",
+                    ),
+                ),
+                Section(
+                    "FASTQ Processing",
+                    Params(
+                        "downsample",
+                        "retain_barcoded_fastqs",
+                    ),
+                ),
+                Section(
+                    "Mapping",
+                    Params(
+                        "sorted_bam",
+                        "remove_bam",
+                    ),
+                ),
+                Section(
+                    "Molecular Counting",
+                    Params(
+                        "exons_only",
+                    ),
+                ),
+                Section(
+                    "Cell Calling",
+                    Params(
+                        "min_sensitivity",
+                        "max_sensitivity",
+                        "force_cells",
+                    ),
+                ),
+                Section(
+                    "Barnyard Analysis",
+                    Params(
+                        "run_barnyard",
+                    ),
+                ),
+                Section(
+                    "Clustering",
+                    Params(
+                        "clustering_percent_genes",
+                        "diff_exp_genes",
+                        "principal_components",
+                        "nearest_neighbors",
+                        "resolution",
+                        "clustering_sensitivity",
+                        "min_clusters_kmeans",
+                        "max_clusters_kmeans",
+                        "umap_axes",
+                    ),
+                ),
+                Section(
+                    "Cell Type Annotation",
+                    Params(
+                        "annotation",
+                    ),
+                ),
+                Section(
+                    "Report",
+                    Params(
+                        "report_id",
+                        "report_description",
+                    ),
+                ),
+                Section(
+                    "SNT",
+                    Params(
+                        "snt_fastq",
+                        "snt_tags",
+                        "snt_position",
+                        "snt_annotation",
+                        "snt_colormap",
+                        "snt_min_percent",
+                        "snt_max_percent",
+                        "snt_min_value",
+                        "snt_max_value",
+                    ),
+                ),
+                Section(
+                    "HTO",
+                    Params(
+                        "hto_fastq",
+                        "hto_tags",
+                        "hto_position",
+                        "hto_annotation",
+                        "hto_colormap",
+                        "hto_min_percent",
+                        "hto_max_percent",
+                        "hto_min_value",
+                        "hto_max_value",
+                        "hto_colorbar",
+                    ),
+                ),
+            ),
         ),
-        Spoiler(
-            "Additional Parameters",
-            Section(
-                "General",
-                Params(
-                    "verbosity",
-                    "random_seed",
-                    "dpi",
-                    "save_svg",
-                ),
-            ),
-            Section(
-                "FASTQ Processing",
-                Params(
-                    "downsample",
-                    "retain_barcoded_fastqs",
-                ),
-            ),
-            Section(
-                "Mapping",
-                Params(
-                    "sorted_bam",
-                    "remove_bam",
-                ),
-            ),
-            Section(
-                "Molecular Counting",
-                Params(
-                    "exons_only",
-                ),
-            ),
-            Section(
-                "Cell Calling",
-                Params(
-                    "min_sensitivity",
-                    "max_sensitivity",
-                    "force_cells",
-                ),
-            ),
-            Section(
-                "Barnyard Analysis",
-                Params(
-                    "run_barnyard",
-                ),
-            ),
-            Section(
-                "Clustering",
-                Params(
-                    "clustering_percent_genes",
-                    "diff_exp_genes",
-                    "principal_components",
-                    "nearest_neighbors",
-                    "resolution",
-                    "clustering_sensitivity",
-                    "min_clusters_kmeans",
-                    "max_clusters_kmeans",
-                    "umap_axes",
-                ),
-            ),
-            Section(
-                "Cell Type Annotation",
-                Params(
-                    "annotation",
-                ),
-            ),
-            Section(
-                "Report",
-                Params(
-                    "report_id",
-                    "report_description",
-                ),
-            ),
-            Section(
-                "SNT",
-                Params(
-                    "snt_fastq",
-                    "snt_tags",
-                    "snt_position",
-                    "snt_annotation",
-                    "snt_colormap",
-                    "snt_min_percent",
-                    "snt_max_percent",
-                    "snt_min_value",
-                    "snt_max_value",
-                ),
-            ),
-            Section(
-                "HTO",
-                Params(
-                    "hto_fastq",
-                    "hto_tags",
-                    "hto_position",
-                    "hto_annotation",
-                    "hto_colormap",
-                    "hto_min_percent",
-                    "hto_max_percent",
-                    "hto_min_value",
-                    "hto_max_value",
-                    "hto_colorbar",
-                ),
-            ),
-        ),
+
+
     ],
 )
 
