@@ -58,7 +58,8 @@ def pipseeker_task(
     dpi: int = 200,
     sorted_bam: bool = False,
     remove_bam: bool = True,
-    downsample: Optional[int] = None,
+    downsample_to: Optional[int] = None,
+    input_reads: Optional[int] = None,
     retain_barcoded_fastqs: bool = False,
     exons_only: bool = False,
     min_sensitivity: int = 1,
@@ -208,7 +209,7 @@ def pipseeker_task(
         custom_genome_reference_fasta_p = Path(custom_genome_reference_fasta)
         reference_p = Path("/root/genome_ref")
 
-        genome_compilation_cmd = [
+        pipseeker_buildmapref_cmd = [
             "pipseeker",
             "buildmapref",
             "--fasta",
@@ -230,28 +231,28 @@ def pipseeker_task(
         ]
 
         if include_types is not None and exclude_types is None:
-            genome_compilation_cmd.extend(
+            pipseeker_buildmapref_cmd.extend(
                 [
                     "--include-types",
                     f"{include_types}",
                 ]
             )
             if biotype_tag is not None:
-                genome_compilation_cmd.extend(
+                pipseeker_buildmapref_cmd.extend(
                     [
                         "--biotype-tag",
                         f"{biotype_tag}",
                     ]
                 )
         elif exclude_types is not None and include_types is None:
-            genome_compilation_cmd.extend(
+            pipseeker_buildmapref_cmd.extend(
                 [
                     "--exclude-types",
                     f"{exclude_types}",
                 ]
             )
             if biotype_tag is not None:
-                genome_compilation_cmd.extend(
+                pipseeker_buildmapref_cmd.extend(
                     [
                         "--biotype-tag",
                         f"{biotype_tag}",
@@ -268,15 +269,15 @@ def pipseeker_task(
 
         if additional_params_buildmapref is not None:
             additional_params_list = additional_params_buildmapref.split()
-            genome_compilation_cmd.extend(additional_params_list)
+            pipseeker_buildmapref_cmd.extend(additional_params_list)
 
-        subprocess.run(genome_compilation_cmd, check=True)
+        subprocess.run(pipseeker_buildmapref_cmd, check=True)
 
     print()
     print("Preparing run")
     local_output_dir = Path("/root/pipseeker_out")
 
-    pipseeker_cmd = [
+    pipseeker_full_cmd = [
         "pipseeker",
         "full",
         "--fastq",
@@ -308,15 +309,22 @@ def pipseeker_task(
         f"{clustering_sensitivity}",
     ]
 
-    if downsample is not None:
-        pipseeker_cmd.extend(
+    if downsample_to is not None:
+        pipseeker_full_cmd.extend(
             [
                 "--downsample-to",
-                f"{downsample}",
+                f"{downsample_to}",
             ]
         )
+        if input_reads is not None:
+            pipseeker_full_cmd.extend(
+                [
+                    "--input-reads",
+                    f"{input_reads}"
+                ]
+            )
     if force_cells is not None:
-        pipseeker_cmd.extend(
+        pipseeker_full_cmd.extend(
             [
                 "--force-cells",
                 f"{force_cells}",
@@ -324,7 +332,7 @@ def pipseeker_task(
         )
 
     if min_clusters_kmeans is not None:
-        pipseeker_cmd.extend(
+        pipseeker_full_cmd.extend(
             [
                 "--min-clusters-kmeans",
                 f"{min_clusters_kmeans}",
@@ -332,7 +340,7 @@ def pipseeker_task(
         )
 
     if max_clusters_kmeans is not None:
-        pipseeker_cmd.extend(
+        pipseeker_full_cmd.extend(
             [
                 "--max-clusters-kmeans",
                 f"{max_clusters_kmeans}",
@@ -340,7 +348,7 @@ def pipseeker_task(
         )
 
     if annotation is not None:
-        pipseeker_cmd.extend(
+        pipseeker_full_cmd.extend(
             [
                 "--annotation",
                 f"{annotation.local_path}",
@@ -348,7 +356,7 @@ def pipseeker_task(
         )
 
     if report_id is not None:
-        pipseeker_cmd.extend(
+        pipseeker_full_cmd.extend(
             [
                 "--id",
                 f"{report_id}",
@@ -356,7 +364,7 @@ def pipseeker_task(
         )
 
     if report_description is not None:
-        pipseeker_cmd.extend(
+        pipseeker_full_cmd.extend(
             [
                 "--description",
                 f"{report_description}",
@@ -364,25 +372,25 @@ def pipseeker_task(
         )
 
     if save_svg is True:
-        pipseeker_cmd.append("--save-svg")
+        pipseeker_full_cmd.append("--save-svg")
 
     if retain_barcoded_fastqs is True:
-        pipseeker_cmd.append("--retain-barcoded-fastqs")
+        pipseeker_full_cmd.append("--retain-barcoded-fastqs")
 
     if sorted_bam is True:
-        pipseeker_cmd.append("--sorted-bam")
+        pipseeker_full_cmd.append("--sorted-bam")
 
     if remove_bam is True:
-        pipseeker_cmd.append("--remove-bam")
+        pipseeker_full_cmd.append("--remove-bam")
 
     if exons_only is True:
-        pipseeker_cmd.append("--exons-only")
+        pipseeker_full_cmd.append("--exons-only")
 
     if run_barnyard is True:
-        pipseeker_cmd.append("--run-barnyard")
+        pipseeker_full_cmd.append("--run-barnyard")
 
     if umap_axes is True:
-        pipseeker_cmd.append("--umap-axes")
+        pipseeker_full_cmd.append("--umap-axes")
 
     parameters = [principal_components, nearest_neighbors, resolution]
 
@@ -390,7 +398,7 @@ def pipseeker_task(
         param is not None for param in parameters
     ):
         if all(param is not None for param in parameters):
-            pipseeker_cmd.extend(
+            pipseeker_full_cmd.extend(
                 [
                     "--principal-components",
                     f"{principal_components}",
@@ -412,7 +420,7 @@ def pipseeker_task(
         )
 
     if snt_fastq is not None:
-        pipseeker_cmd.extend(
+        pipseeker_full_cmd.extend(
             [
                 "--snt-fastq",
                 f"{snt_fastq.local_path}",
@@ -422,7 +430,7 @@ def pipseeker_task(
         )
 
         if snt_tags is not None:
-            pipseeker_cmd.extend(
+            pipseeker_full_cmd.extend(
                 [
                     "--snt-tags",
                     f"{snt_tags.local_path}",
@@ -430,7 +438,7 @@ def pipseeker_task(
             )
 
         if snt_annotation is not None:
-            pipseeker_cmd.extend(
+            pipseeker_full_cmd.extend(
                 [
                     "--snt-annotation",
                     f"{snt_annotation.local_path}",
@@ -438,7 +446,7 @@ def pipseeker_task(
             )
 
         if snt_colormap is not None:
-            pipseeker_cmd.extend(
+            pipseeker_full_cmd.extend(
                 [
                     "--snt-colormap",
                     f"{snt_colormap}",
@@ -446,7 +454,7 @@ def pipseeker_task(
             )
 
         if (snt_min_value is not None) and (snt_max_value is not None):
-            pipseeker_cmd.extend(
+            pipseeker_full_cmd.extend(
                 [
                     "--snt-min-value",
                     f"{snt_min_value}",
@@ -456,7 +464,7 @@ def pipseeker_task(
             )
 
         elif (snt_min_value is None) and (snt_max_value is None):
-            pipseeker_cmd.extend(
+            pipseeker_full_cmd.extend(
                 [
                     "--snt-min-percent",
                     f"{snt_min_percent}",
@@ -474,7 +482,7 @@ def pipseeker_task(
             )
 
     if hto_fastq is not None:
-        pipseeker_cmd.extend(
+        pipseeker_full_cmd.extend(
             [
                 "--hto-fastq",
                 f"{hto_fastq.local_path}",
@@ -484,7 +492,7 @@ def pipseeker_task(
         )
 
         if hto_tags is not None:
-            pipseeker_cmd.extend(
+            pipseeker_full_cmd.extend(
                 [
                     "--hto-tags",
                     f"{hto_tags.local_path}",
@@ -492,7 +500,7 @@ def pipseeker_task(
             )
 
         if hto_annotation is not None:
-            pipseeker_cmd.extend(
+            pipseeker_full_cmd.extend(
                 [
                     "--hto-annotation",
                     f"{hto_annotation.local_path}",
@@ -500,7 +508,7 @@ def pipseeker_task(
             )
 
         if hto_colormap is not None:
-            pipseeker_cmd.extend(
+            pipseeker_full_cmd.extend(
                 [
                     "--hto-colormap",
                     f"{hto_colormap}",
@@ -508,7 +516,7 @@ def pipseeker_task(
             )
 
         if (hto_min_value is not None) and (hto_max_value is not None):
-            pipseeker_cmd.extend(
+            pipseeker_full_cmd.extend(
                 [
                     "--hto-min-value",
                     f"{hto_min_value}",
@@ -518,7 +526,7 @@ def pipseeker_task(
             )
 
         elif (hto_min_value is None) and (hto_max_value is None):
-            pipseeker_cmd.extend(
+            pipseeker_full_cmd.extend(
                 [
                     "--hto-min-percent",
                     f"{hto_min_percent}",
@@ -531,18 +539,26 @@ def pipseeker_task(
                 typ="warning",
                 data={
                     "title": "PIPseeker parameters warning",
-                    "body": "Scalars and percentile ranks for HTO feature plots cannot be used together in the same analysis",
+                    "body": "Scalars and percentile ranks for HTO feature plots "
+                            "cannot be used together in the same analysis",
                 },
             )
 
-    print()
-    print(f'Running {" ".join(pipseeker_cmd)}')
-    subprocess.run(pipseeker_cmd, check=True)
+    if pipseeker_mode == 'full_mode':
+        print(f'Running {" ".join(pipseeker_full_cmd)}')
+        subprocess.run(pipseeker_full_cmd, check=True)
 
-    if genome_source == "custom_build":
-        print("Moving custom built genome")
+    elif pipseeker_mode == "buildmapref_mode":
+        print("Building Custom Genome")
+        print(f'Running {" ".join(pipseeker_buildmapref_cmd)}')
         reference_p.rename(local_output_dir / reference_p.name)
+        subprocess.run(pipseeker_buildmapref_cmd, check=True)
+        print("Uploading results")
 
-    print()
-    print("Uploading results")
+    elif pipseeker_mode == "cells_mode":
+        print("Running Cells Mode")
+        subprocess.run(pipseeker_cells_cmd)
+    else:
+        raise ValueError("Invalid PIPseeker mode is selected")
+
     return LatchOutputDir(str(local_output_dir), output_directory.remote_path)
