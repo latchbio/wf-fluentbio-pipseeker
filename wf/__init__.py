@@ -1,5 +1,4 @@
 from typing import Optional
-
 from latch import workflow
 from latch.types import (
     LatchAuthor,
@@ -19,39 +18,6 @@ from latch.types import (
 from latch.resources.launch_plan import LaunchPlan
 
 from wf.pipseeker import *
-
-metadata = LatchMetadata(
-    display_name="Test",
-    documentation="",
-    author=LatchAuthor(
-        name="LatchBio",
-    ),
-    repository="https://github.com/latchbio/wf-fluentbio-pipseeker",
-    license="MIT",
-    parameters={},
-    flow=[Section(
-        "Options",
-        Fork(
-            "genome_source",
-            "",
-            full_mode=ForkBranch(
-                "Full Mode",
-                Params(
-                    "compiled_genome_reference",
-                ),
-            ),
-            cells_mode=ForkBranch(
-                "Precompiled Custom Reference Genome",
-                Text("Choose one of the following:"),
-                Params(
-                    "custom_compiled_genome_zipped",
-                    "custom_compiled_genome",
-                ),
-            ),
-        ),
-    ),
-    ],
-)
 
 shared_parameters = {
     "pipseeker_mode": LatchParameter(
@@ -335,114 +301,118 @@ buildmapref_mode_parameters = {
     )
 }
 
-section_full_mode = Section("Full Mode",
-                            Params(
-                                "fastq_directory",
-                                "chemistry"
-                            ),
-                            Section(
-                                "General",
-                                Params(
-                                    "verbosity",
-                                    "random_seed",
-                                    "dpi",
-                                    "save_svg",
-                                ),
-                            ),
-                            Section(
-                                "FASTQ Processing",
-                                Params(
-                                    "downsample_to",
-                                    "input_reads",
-                                    "retain_barcoded_fastqs",
-                                ),
-                            ),
-                            Section(
-                                "Mapping",
-                                Params(
-                                    "sorted_bam",
-                                    "remove_bam",
-                                ),
-                            ),
-                            Section(
-                                "Molecular Counting",
-                                Params(
-                                    "exons_only",
-                                ),
-                            ),
-                            Section(
-                                "Cell Calling",
-                                Params(
-                                    "min_sensitivity",
-                                    "max_sensitivity",
-                                    "force_cells",
-                                ),
-                            ),
-                            Section(
-                                "Barnyard Analysis",
-                                Params(
-                                    "run_barnyard",
-                                ),
-                            ),
-                            Section(
-                                "Clustering",
-                                Params(
-                                    "clustering_percent_genes",
-                                    "diff_exp_genes",
-                                    "principal_components",
-                                    "nearest_neighbors",
-                                    "resolution",
-                                    "clustering_sensitivity",
-                                    "min_clusters_kmeans",
-                                    "max_clusters_kmeans",
-                                    "umap_axes",
-                                ),
-                            ),
-                            Section(
-                                "Cell Type Annotation",
-                                Params(
-                                    "annotation",
-                                ),
-                            ),
-                            Section(
-                                "Report",
-                                Params(
-                                    "report_id",
-                                    "report_description",
-                                ),
-                            ),
-                            Section(
-                                "SNT",
-                                Params(
-                                    "snt_fastq",
-                                    "snt_tags",
-                                    "snt_position",
-                                    "snt_annotation",
-                                    "snt_colormap",
-                                    "snt_min_percent",
-                                    "snt_max_percent",
-                                    "snt_min_value",
-                                    "snt_max_value",
-                                ),
-                            ),
-                            Section(
-                                "HTO",
-                                Params(
-                                    "hto_fastq",
-                                    "hto_tags",
-                                    "hto_position",
-                                    "hto_annotation",
-                                    "hto_colormap",
-                                    "hto_min_percent",
-                                    "hto_max_percent",
-                                    "hto_min_value",
-                                    "hto_max_value",
-                                    "hto_colorbar",
-                                ),
-                            ),
-                            )
+#################
+#  GUI Buildout
 
-section_buildmapref = Section(
+shared_full_cells_mode_spoiler_section = Section("",
+                                                 Section(
+                                                     "Cell Calling",
+                                                     Params(
+                                                         "min_sensitivity",
+                                                         "max_sensitivity",
+                                                         "force_cells",
+                                                     ),
+                                                 ),
+                                                 Section(
+                                                     "Cell Type Annotation",
+                                                     Params(
+                                                         "annotation",
+                                                     ),
+                                                 ),
+                                                 Section(
+                                                     "General",
+                                                     Params(
+                                                         "verbosity",
+                                                         "random_seed",
+                                                         "dpi",
+                                                         "save_svg",
+                                                     ),
+                                                 ),
+                                                 Section(
+                                                     "Clustering",
+                                                     Params(
+                                                         "clustering_percent_genes",
+                                                         "diff_exp_genes",
+                                                         "principal_components",
+                                                         "nearest_neighbors",
+                                                         "resolution",
+                                                         "clustering_sensitivity",
+                                                         "min_clusters_kmeans",
+                                                         "max_clusters_kmeans",
+                                                         "umap_axes",
+                                                     ),
+                                                 ),
+                                                 Section(
+                                                     "Report",
+                                                     Params(
+                                                         "report_id",
+                                                         "report_description",
+                                                     ),
+                                                 ),
+                                                 Section(
+                                                     "SNT",
+                                                     Params(
+                                                         "snt_fastq",
+                                                         "snt_tags",
+                                                         "snt_position",
+                                                         "snt_annotation",
+                                                         "snt_colormap",
+                                                         "snt_min_percent",
+                                                         "snt_max_percent",
+                                                         "snt_min_value",
+                                                         "snt_max_value",
+                                                     ),
+                                                 ),
+                                                 Section(
+                                                     "HTO",
+                                                     Params(
+                                                         "hto_fastq",
+                                                         "hto_tags",
+                                                         "hto_position",
+                                                         "hto_annotation",
+                                                         "hto_colormap",
+                                                         "hto_min_percent",
+                                                         "hto_max_percent",
+                                                         "hto_min_value",
+                                                         "hto_max_value",
+                                                         "hto_colorbar",
+                                                     ),
+                                                 )
+                                                 )
+
+
+full_mode_spoiler_section = Section("",
+                                    Section(
+                                        "FASTQ Processing",
+                                        Params(
+                                            "downsample_to",
+                                            "input_reads",
+                                            "retain_barcoded_fastqs",
+                                        ),
+                                    ),
+                                    Section(
+                                        "Mapping",
+                                        Params(
+                                            "sorted_bam",
+                                            "remove_bam",
+                                        ),
+                                    ),
+                                    Section(
+                                        "Molecular Counting",
+                                        Params(
+                                            "exons_only",
+                                        ),
+                                    ),
+                                    Section(
+                                        "Barnyard Analysis",
+                                        Params(
+                                            "run_barnyard",
+                                        ),
+                                    ),
+                                    )
+
+
+full_mode_mapping_section = Section(
     "Mapping Reference",
     Fork(
         "genome_source",
@@ -459,31 +429,59 @@ section_buildmapref = Section(
             Params(
                 "custom_compiled_genome_zipped",
                 "custom_compiled_genome",
-            ),
-        ),
-        custom_build=ForkBranch(
-            "Generate Custom Reference Genome",
-            Params(
-                "custom_genome_reference_fasta",
-                "custom_genome_reference_gtf",
-            ),
-            Spoiler(
-                "`buildmapref` Additional Parameters",
-                Params(
-                    "include_types",
-                    "exclude_types",
-                    "biotype_tag",
-                    "read_length",
-                    "sparsity",
-                    "additional_params_buildmapref",
-                ),
-            ),
-        ),
-    ),
+            )
+        )
+    )
 )
 
-section_cells_mode = Section("Cells Mode",
-                             )
+
+section_full_mode = Section(
+    "Full Mode",
+    Params("output_directory",
+           "fastq_directory",
+           "chemistry"
+    ),
+    full_mode_mapping_section,
+    Spoiler(
+        "Additional Parameters",
+        full_mode_spoiler_section,
+        shared_full_cells_mode_spoiler_section)
+)
+
+
+section_cells_mode = Section(
+    "Cells Mode",
+    Params("output_directory",
+           "previous",
+    ),
+    Spoiler(
+        "Additional Parameters",
+        shared_full_cells_mode_spoiler_section,
+        Params("hash_cellsmode")
+    )
+)
+
+
+section_buildmapref = Section(
+    "Generate Custom Reference Genome",
+    Params(
+        "output_directory",
+        "custom_genome_reference_fasta",
+        "custom_genome_reference_gtf",
+    ),
+    Spoiler(
+        "Additional Parameters",
+        Params(
+            "include_types",
+            "exclude_types",
+            "biotype_tag",
+            "read_length",
+            "sparsity",
+            "additional_params_buildmapref",
+        )
+    )
+)
+
 
 metadata = LatchMetadata(
     display_name="Fluent BioSciences PIPseeker v3.1.3",
@@ -514,94 +512,85 @@ metadata = LatchMetadata(
 
 
 @workflow(metadata)
-def pipseeker_wf(
-        fastq_directory: LatchDir,
-        genome_source: str,
-        compiled_genome_reference: GenomeType,
-        custom_compiled_genome: Optional[LatchDir],
-        custom_compiled_genome_zipped: Optional[LatchFile],
-        custom_genome_reference_fasta: LatchFile,
-        custom_genome_reference_gtf: LatchFile,
-        include_types: Optional[str] = None,
-        exclude_types: Optional[str] = None,
-        biotype_tag: Optional[str] = None,
-        read_length: Optional[int] = 100,
-        sparsity: Optional[int] = 3,
-        additional_params_buildmapref: Optional[str] = None,
-        chemistry: Chemistry = Chemistry.v4,
-        output_directory: LatchOutputDir = LatchOutputDir("latch:///PIPseeker_Output"),
-        verbosity: Verbosity = Verbosity.two,
-        random_seed: int = 0,
-        save_svg: bool = False,
-        dpi: int = 200,
-        downsample_to: Optional[int] = None,
-        input_reads: Optional[int] = None,
-        retain_barcoded_fastqs: bool = False,
-        sorted_bam: bool = False,
-        remove_bam: bool = False,
-        exons_only: bool = False,
-        min_sensitivity: int = 1,
-        max_sensitivity: int = 5,
-        force_cells: Optional[int] = None,
-        run_barnyard: bool = False,
-        clustering_percent_genes: int = 10,
-        diff_exp_genes: int = 50,
-        principal_components: Optional[int] = None,
-        nearest_neighbors: Optional[int] = None,
-        resolution: Optional[int] = None,
-        clustering_sensitivity: str = "medium",
-        min_clusters_kmeans: Optional[int] = None,
-        max_clusters_kmeans: Optional[int] = None,
-        umap_axes: bool = False,
-        annotation: Optional[LatchFile] = None,
-        report_id: Optional[str] = None,
-        report_description: Optional[str] = None,
-        snt_fastq: Optional[LatchFile] = None,
-        snt_tags: Optional[LatchFile] = None,
-        snt_position: int = 0,
-        snt_annotation: Optional[LatchFile] = None,
-        snt_colormap: str = "gray-to-green",
-        snt_min_percent: int = 1,
-        snt_max_percent: int = 99,
-        snt_min_value: Optional[int] = None,
-        snt_max_value: Optional[int] = None,
-        hto_fastq: Optional[LatchFile] = None,
-        hto_tags: Optional[LatchFile] = None,
-        hto_position: int = 0,
-        hto_annotation: Optional[LatchFile] = None,
-        hto_colormap: str = "gray-to-red",
-        hto_min_percent: int = 1,
-        hto_max_percent: int = 99,
-        hto_min_value: Optional[int] = None,
-        hto_max_value: Optional[int] = None,
-) -> LatchOutputDir:
-    """
-    # Fluent BioSciences PIPseeker
+def pipseeker_wf(*,
+                 pipseeker_mode: str,
+                 output_directory: LatchOutputDir = LatchOutputDir("latch:///PIPseeker_Output"),
+                 fastq_directory: LatchDir,
+                 chemistry: Chemistry = Chemistry.v4,
+                 genome_source: str,
+                 compiled_genome_reference: GenomeType,
+                 custom_compiled_genome: Optional[LatchDir],
+                 custom_compiled_genome_zipped: Optional[LatchFile],
+                 verbosity: Verbosity = Verbosity.two,
+                 random_seed: int = 0,
+                 save_svg: bool = False,
+                 dpi: int = 200,
+                 downsample_to: Optional[int] = None,
+                 input_reads: Optional[int] = None,
+                 retain_barcoded_fastqs: bool = False,
+                 sorted_bam: bool = False,
+                 remove_bam: bool = False,
+                 exons_only: bool = False,
+                 min_sensitivity: int = 1,
+                 max_sensitivity: int = 5,
+                 force_cells: Optional[int] = None,
+                 run_barnyard: bool = False,
+                 clustering_percent_genes: int = 10,
+                 diff_exp_genes: int = 50,
+                 principal_components: Optional[int] = None,
+                 nearest_neighbors: Optional[int] = None,
+                 resolution: Optional[int] = None,
+                 clustering_sensitivity: str = "medium",
+                 min_clusters_kmeans: Optional[int] = None,
+                 max_clusters_kmeans: Optional[int] = None,
+                 umap_axes: bool = False,
+                 annotation: Optional[LatchFile] = None,
+                 report_id: Optional[str] = None,
+                 report_description: Optional[str] = None,
+                 snt_fastq: Optional[LatchFile] = None,
+                 snt_tags: Optional[LatchFile] = None,
+                 snt_position: int = 0,
+                 snt_annotation: Optional[LatchFile] = None,
+                 snt_colormap: str = "gray-to-green",
+                 snt_min_percent: int = 1,
+                 snt_max_percent: int = 99,
+                 snt_min_value: Optional[int] = None,
+                 snt_max_value: Optional[int] = None,
+                 hto_fastq: Optional[LatchFile] = None,
+                 hto_tags: Optional[LatchFile] = None,
+                 hto_position: int = 0,
+                 hto_annotation: Optional[LatchFile] = None,
+                 hto_colormap: str = "gray-to-red",
+                 hto_colorbar: bool = False,
+                 hto_min_percent: int = 1,
+                 hto_max_percent: int = 99,
+                 hto_min_value: Optional[int] = None,
+                 hto_max_value: Optional[int] = None,
 
-    PIPseeker analyzes single-cell RNA data obtained with [Fluent BioSciences](https://www.fluentbio.com/products/pipseeker-software-for-data-analysis/) proprietary PIPseq™ 3 Single Cell RNA (scRNA-seq) Kits.
+                 # cells mode args
+                 previous: LatchDir,
+                 hash_cellsmode: Optional[str] = None,
 
-    PIPseeker offers a comprehensive analysis solution that provides the user with detailed metrics, gene expression profiles, basic cell quality and clustering indicators, and cell type annotation for some sample types.
-    The outputs of PIPseeker can then be used for subsequent, specialized tertiary analysis streams.
-    PIPseeker also supports specialized applications like measuring surface protein levels using antibody-derived tags (SNTs) and cell hashing using hashtag oligonucleotides (HTOs).
-
-    """
+                 # buildmapref mode args
+                 custom_genome_reference_fasta: LatchFile,
+                 custom_genome_reference_gtf: LatchFile,
+                 include_types: Optional[str] = None,
+                 exclude_types: Optional[str] = None,
+                 biotype_tag: Optional[str] = None,
+                 read_length: Optional[int] = 100,
+                 sparsity: Optional[int] = 3,
+                 additional_params_buildmapref: Optional[str] = None
+                 ) -> LatchOutputDir:
 
     return pipseeker_task(
+        pipseeker_mode=pipseeker_mode,
+        output_directory=output_directory,
         fastq_directory=fastq_directory,
         chemistry=chemistry,
         genome_source=genome_source,
         compiled_genome_reference=compiled_genome_reference,
         custom_compiled_genome=custom_compiled_genome,
         custom_compiled_genome_zipped=custom_compiled_genome_zipped,
-        custom_genome_reference_fasta=custom_genome_reference_fasta,
-        custom_genome_reference_gtf=custom_genome_reference_gtf,
-        include_types=include_types,
-        exclude_types=exclude_types,
-        biotype_tag=biotype_tag,
-        read_length=read_length,
-        sparsity=sparsity,
-        additional_params_buildmapref=additional_params_buildmapref,
-        output_directory=output_directory,
         sorted_bam=sorted_bam,
         verbosity=verbosity,
         random_seed=random_seed,
@@ -642,12 +631,29 @@ def pipseeker_wf(
         hto_position=hto_position,
         hto_annotation=hto_annotation,
         hto_colormap=hto_colormap,
+        hto_colorbar=hto_colorbar,
         hto_min_percent=hto_min_percent,
         hto_max_percent=hto_max_percent,
         hto_min_value=hto_min_value,
         hto_max_value=hto_max_value,
+
+        # cells mode args
+        hash_cellsmode=hash_cellsmode,
+        previous=previous,
+
+        # buildmapref mode args
+        custom_genome_reference_fasta=custom_genome_reference_fasta,
+        custom_genome_reference_gtf=custom_genome_reference_gtf,
+        include_types=include_types,
+        exclude_types=exclude_types,
+        biotype_tag=biotype_tag,
+        read_length=read_length,
+        sparsity=sparsity,
+        additional_params_buildmapref=additional_params_buildmapref
     )
 
+
+# Testing
 
 LaunchPlan(
     pipseeker_wf,

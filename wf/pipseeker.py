@@ -36,66 +36,74 @@ class Verbosity(Enum):
 
 @custom_task(cpu=18, memory=190, storage_gib=500)
 # @medium_task
-def pipseeker_task(
-    fastq_directory: LatchDir,
-    genome_source: str,
-    compiled_genome_reference: GenomeType,
-    custom_compiled_genome: Optional[LatchDir],
-    custom_compiled_genome_zipped: Optional[LatchFile],
-    custom_genome_reference_fasta: LatchFile,
-    custom_genome_reference_gtf: LatchFile,
-    include_types: Optional[str] = None,
-    exclude_types: Optional[str] = None,
-    biotype_tag: Optional[str] = None,
-    read_length: Optional[int] = 100,
-    sparsity: Optional[int] = 3,
-    additional_params_buildmapref: Optional[str] = None,
-    chemistry: Chemistry = Chemistry.v4,
-    output_directory: LatchOutputDir = LatchOutputDir("latch:///PIPseeker_Output"),
-    verbosity: Verbosity = Verbosity.two,
-    random_seed: int = 0,
-    save_svg: bool = False,
-    dpi: int = 200,
-    sorted_bam: bool = False,
-    remove_bam: bool = True,
-    downsample_to: Optional[int] = None,
-    input_reads: Optional[int] = None,
-    retain_barcoded_fastqs: bool = False,
-    exons_only: bool = False,
-    min_sensitivity: int = 1,
-    max_sensitivity: int = 5,
-    force_cells: Optional[int] = None,
-    run_barnyard: bool = False,
-    clustering_percent_genes: int = 10,
-    diff_exp_genes: int = 50,
-    principal_components: Optional[int] = None,
-    nearest_neighbors: Optional[int] = None,
-    resolution: Optional[int] = None,
-    clustering_sensitivity: str = "medium",
-    min_clusters_kmeans: Optional[int] = None,
-    max_clusters_kmeans: Optional[int] = None,
-    umap_axes: bool = False,
-    annotation: Optional[LatchFile] = None,
-    report_id: Optional[str] = None,
-    report_description: Optional[str] = None,
-    snt_fastq: Optional[LatchFile] = None,
-    snt_tags: Optional[LatchFile] = None,
-    snt_position: int = 0,
-    snt_annotation: Optional[LatchFile] = None,
-    snt_colormap: str = "gray-to-green",
-    snt_min_percent: int = 1,
-    snt_max_percent: int = 99,
-    snt_min_value: Optional[int] = None,
-    snt_max_value: Optional[int] = None,
-    hto_fastq: Optional[LatchFile] = None,
-    hto_tags: Optional[LatchFile] = None,
-    hto_position: int = 0,
-    hto_annotation: Optional[LatchFile] = None,
-    hto_colormap: str = "gray-to-red",
-    hto_min_percent: int = 1,
-    hto_max_percent: int = 99,
-    hto_min_value: Optional[int] = None,
-    hto_max_value: Optional[int] = None,
+def pipseeker_task(*,
+                   pipseeker_mode: str,
+                   output_directory: LatchOutputDir = LatchOutputDir("latch:///PIPseeker_Output"),
+                   fastq_directory: LatchDir,
+                   chemistry: Chemistry = Chemistry.v4,
+                   genome_source: str,
+                   compiled_genome_reference: GenomeType,
+                   custom_compiled_genome: Optional[LatchDir],
+                   custom_compiled_genome_zipped: Optional[LatchFile],
+                   verbosity: Verbosity = Verbosity.two,
+                   random_seed: int = 0,
+                   save_svg: bool = False,
+                   dpi: int = 200,
+                   downsample_to: Optional[int] = None,
+                   input_reads: Optional[int] = None,
+                   retain_barcoded_fastqs: bool = False,
+                   sorted_bam: bool = False,
+                   remove_bam: bool = False,
+                   exons_only: bool = False,
+                   min_sensitivity: int = 1,
+                   max_sensitivity: int = 5,
+                   force_cells: Optional[int] = None,
+                   run_barnyard: bool = False,
+                   clustering_percent_genes: int = 10,
+                   diff_exp_genes: int = 50,
+                   principal_components: Optional[int] = None,
+                   nearest_neighbors: Optional[int] = None,
+                   resolution: Optional[int] = None,
+                   clustering_sensitivity: str = "medium",
+                   min_clusters_kmeans: Optional[int] = None,
+                   max_clusters_kmeans: Optional[int] = None,
+                   umap_axes: bool = False,
+                   annotation: Optional[LatchFile] = None,
+                   report_id: Optional[str] = None,
+                   report_description: Optional[str] = None,
+                   snt_fastq: Optional[LatchFile] = None,
+                   snt_tags: Optional[LatchFile] = None,
+                   snt_position: int = 0,
+                   snt_annotation: Optional[LatchFile] = None,
+                   snt_colormap: str = "gray-to-green",
+                   snt_min_percent: int = 1,
+                   snt_max_percent: int = 99,
+                   snt_min_value: Optional[int] = None,
+                   snt_max_value: Optional[int] = None,
+                   hto_fastq: Optional[LatchFile] = None,
+                   hto_tags: Optional[LatchFile] = None,
+                   hto_position: int = 0,
+                   hto_annotation: Optional[LatchFile] = None,
+                   hto_colormap: str = "gray-to-red",
+                   hto_colorbar: bool = False,
+                   hto_min_percent: int = 1,
+                   hto_max_percent: int = 99,
+                   hto_min_value: Optional[int] = None,
+                   hto_max_value: Optional[int] = None,
+
+                   # cells mode args
+                   previous: LatchDir,
+                   hash_cellsmode: Optional[str] = None,
+
+                   # buildmapref mode args
+                   custom_genome_reference_fasta: LatchFile,
+                   custom_genome_reference_gtf: LatchFile,
+                   include_types: Optional[str] = None,
+                   exclude_types: Optional[str] = None,
+                   biotype_tag: Optional[str] = None,
+                   read_length: Optional[int] = 100,
+                   sparsity: Optional[int] = 3,
+                   additional_params_buildmapref: Optional[str] = None
 ) -> LatchOutputDir:
     print()
     print("Downloading and unpacking reference genome")
@@ -277,7 +285,7 @@ def pipseeker_task(
     print("Preparing run")
     local_output_dir = Path("/root/pipseeker_out")
 
-    pipseeker_full_cmd = [
+    pipseeker_cmd = [
         "pipseeker",
         "full",
         "--fastq",
@@ -310,21 +318,21 @@ def pipseeker_task(
     ]
 
     if downsample_to is not None:
-        pipseeker_full_cmd.extend(
+        pipseeker_cmd.extend(
             [
                 "--downsample-to",
                 f"{downsample_to}",
             ]
         )
         if input_reads is not None:
-            pipseeker_full_cmd.extend(
+            pipseeker_cmd.extend(
                 [
                     "--input-reads",
                     f"{input_reads}"
                 ]
             )
     if force_cells is not None:
-        pipseeker_full_cmd.extend(
+        pipseeker_cmd.extend(
             [
                 "--force-cells",
                 f"{force_cells}",
@@ -332,7 +340,7 @@ def pipseeker_task(
         )
 
     if min_clusters_kmeans is not None:
-        pipseeker_full_cmd.extend(
+        pipseeker_cmd.extend(
             [
                 "--min-clusters-kmeans",
                 f"{min_clusters_kmeans}",
@@ -340,7 +348,7 @@ def pipseeker_task(
         )
 
     if max_clusters_kmeans is not None:
-        pipseeker_full_cmd.extend(
+        pipseeker_cmd.extend(
             [
                 "--max-clusters-kmeans",
                 f"{max_clusters_kmeans}",
@@ -348,7 +356,7 @@ def pipseeker_task(
         )
 
     if annotation is not None:
-        pipseeker_full_cmd.extend(
+        pipseeker_cmd.extend(
             [
                 "--annotation",
                 f"{annotation.local_path}",
@@ -356,7 +364,7 @@ def pipseeker_task(
         )
 
     if report_id is not None:
-        pipseeker_full_cmd.extend(
+        pipseeker_cmd.extend(
             [
                 "--id",
                 f"{report_id}",
@@ -364,7 +372,7 @@ def pipseeker_task(
         )
 
     if report_description is not None:
-        pipseeker_full_cmd.extend(
+        pipseeker_cmd.extend(
             [
                 "--description",
                 f"{report_description}",
@@ -372,25 +380,25 @@ def pipseeker_task(
         )
 
     if save_svg is True:
-        pipseeker_full_cmd.append("--save-svg")
+        pipseeker_cmd.append("--save-svg")
 
     if retain_barcoded_fastqs is True:
-        pipseeker_full_cmd.append("--retain-barcoded-fastqs")
+        pipseeker_cmd.append("--retain-barcoded-fastqs")
 
     if sorted_bam is True:
-        pipseeker_full_cmd.append("--sorted-bam")
+        pipseeker_cmd.append("--sorted-bam")
 
     if remove_bam is True:
-        pipseeker_full_cmd.append("--remove-bam")
+        pipseeker_cmd.append("--remove-bam")
 
     if exons_only is True:
-        pipseeker_full_cmd.append("--exons-only")
+        pipseeker_cmd.append("--exons-only")
 
     if run_barnyard is True:
-        pipseeker_full_cmd.append("--run-barnyard")
+        pipseeker_cmd.append("--run-barnyard")
 
     if umap_axes is True:
-        pipseeker_full_cmd.append("--umap-axes")
+        pipseeker_cmd.append("--umap-axes")
 
     parameters = [principal_components, nearest_neighbors, resolution]
 
@@ -398,7 +406,7 @@ def pipseeker_task(
         param is not None for param in parameters
     ):
         if all(param is not None for param in parameters):
-            pipseeker_full_cmd.extend(
+            pipseeker_cmd.extend(
                 [
                     "--principal-components",
                     f"{principal_components}",
@@ -420,7 +428,7 @@ def pipseeker_task(
         )
 
     if snt_fastq is not None:
-        pipseeker_full_cmd.extend(
+        pipseeker_cmd.extend(
             [
                 "--snt-fastq",
                 f"{snt_fastq.local_path}",
@@ -430,7 +438,7 @@ def pipseeker_task(
         )
 
         if snt_tags is not None:
-            pipseeker_full_cmd.extend(
+            pipseeker_cmd.extend(
                 [
                     "--snt-tags",
                     f"{snt_tags.local_path}",
@@ -438,7 +446,7 @@ def pipseeker_task(
             )
 
         if snt_annotation is not None:
-            pipseeker_full_cmd.extend(
+            pipseeker_cmd.extend(
                 [
                     "--snt-annotation",
                     f"{snt_annotation.local_path}",
@@ -446,7 +454,7 @@ def pipseeker_task(
             )
 
         if snt_colormap is not None:
-            pipseeker_full_cmd.extend(
+            pipseeker_cmd.extend(
                 [
                     "--snt-colormap",
                     f"{snt_colormap}",
@@ -454,7 +462,7 @@ def pipseeker_task(
             )
 
         if (snt_min_value is not None) and (snt_max_value is not None):
-            pipseeker_full_cmd.extend(
+            pipseeker_cmd.extend(
                 [
                     "--snt-min-value",
                     f"{snt_min_value}",
@@ -464,7 +472,7 @@ def pipseeker_task(
             )
 
         elif (snt_min_value is None) and (snt_max_value is None):
-            pipseeker_full_cmd.extend(
+            pipseeker_cmd.extend(
                 [
                     "--snt-min-percent",
                     f"{snt_min_percent}",
@@ -482,7 +490,7 @@ def pipseeker_task(
             )
 
     if hto_fastq is not None:
-        pipseeker_full_cmd.extend(
+        pipseeker_cmd.extend(
             [
                 "--hto-fastq",
                 f"{hto_fastq.local_path}",
@@ -492,7 +500,7 @@ def pipseeker_task(
         )
 
         if hto_tags is not None:
-            pipseeker_full_cmd.extend(
+            pipseeker_cmd.extend(
                 [
                     "--hto-tags",
                     f"{hto_tags.local_path}",
@@ -500,7 +508,7 @@ def pipseeker_task(
             )
 
         if hto_annotation is not None:
-            pipseeker_full_cmd.extend(
+            pipseeker_cmd.extend(
                 [
                     "--hto-annotation",
                     f"{hto_annotation.local_path}",
@@ -508,7 +516,7 @@ def pipseeker_task(
             )
 
         if hto_colormap is not None:
-            pipseeker_full_cmd.extend(
+            pipseeker_cmd.extend(
                 [
                     "--hto-colormap",
                     f"{hto_colormap}",
@@ -516,7 +524,7 @@ def pipseeker_task(
             )
 
         if (hto_min_value is not None) and (hto_max_value is not None):
-            pipseeker_full_cmd.extend(
+            pipseeker_cmd.extend(
                 [
                     "--hto-min-value",
                     f"{hto_min_value}",
@@ -526,7 +534,7 @@ def pipseeker_task(
             )
 
         elif (hto_min_value is None) and (hto_max_value is None):
-            pipseeker_full_cmd.extend(
+            pipseeker_cmd.extend(
                 [
                     "--hto-min-percent",
                     f"{hto_min_percent}",
@@ -544,21 +552,17 @@ def pipseeker_task(
                 },
             )
 
-    if pipseeker_mode == 'full_mode':
-        print(f'Running {" ".join(pipseeker_full_cmd)}')
-        subprocess.run(pipseeker_full_cmd, check=True)
 
-    elif pipseeker_mode == "buildmapref_mode":
+    # Running PIPseeker
+    print(f'Running {" ".join(pipseeker_cmd)}')
+    subprocess.run(pipseeker_cmd, check=True)
+
+    if pipseeker_mode == 'buildmapref_mode':
         print("Building Custom Genome")
-        print(f'Running {" ".join(pipseeker_buildmapref_cmd)}')
         reference_p.rename(local_output_dir / reference_p.name)
         subprocess.run(pipseeker_buildmapref_cmd, check=True)
         print("Uploading results")
 
-    elif pipseeker_mode == "cells_mode":
-        print("Running Cells Mode")
-        subprocess.run(pipseeker_cells_cmd)
-    else:
         raise ValueError("Invalid PIPseeker mode is selected")
 
     return LatchOutputDir(str(local_output_dir), output_directory.remote_path)
