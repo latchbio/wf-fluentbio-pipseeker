@@ -37,75 +37,74 @@ class Verbosity(Enum):
 @custom_task(cpu=18, memory=190, storage_gib=500)
 # @medium_task
 def pipseeker_task(*,
-             pipseeker_mode: str,
-             output_directory: LatchOutputDir = LatchOutputDir("latch:///PIPseeker_Output"),
-             fastq_directory: LatchDir,
-             chemistry: Chemistry = Chemistry.v4,
-             genome_source: str,
-             compiled_genome_reference: GenomeType,
-             custom_compiled_genome: Optional[LatchDir],
-             custom_compiled_genome_zipped: Optional[LatchFile],
-             verbosity: Verbosity = Verbosity.two,
-             random_seed: int = 0,
-             save_svg: bool = False,
-             dpi: int = 200,
-             downsample_to: Optional[int] = None,
-             input_reads: Optional[int] = None,
-             retain_barcoded_fastqs: bool = False,
-             sorted_bam: bool = False,
-             remove_bam: bool = False,
-             exons_only: bool = False,
-             min_sensitivity: int = 1,
-             max_sensitivity: int = 5,
-             force_cells: Optional[int] = None,
-             run_barnyard: bool = False,
-             clustering_percent_genes: int = 10,
-             diff_exp_genes: int = 50,
-             principal_components: Optional[int] = None,
-             nearest_neighbors: Optional[int] = None,
-             resolution: Optional[int] = None,
-             clustering_sensitivity: str = "medium",
-             min_clusters_kmeans: Optional[int] = None,
-             max_clusters_kmeans: Optional[int] = None,
-             umap_axes: bool = False,
-             annotation: Optional[LatchFile] = None,
-             report_id: Optional[str] = None,
-             report_description: Optional[str] = None,
-             snt_fastq: Optional[LatchFile] = None,
-             snt_tags: Optional[LatchFile] = None,
-             snt_position: int = 0,
-             snt_annotation: Optional[LatchFile] = None,
-             snt_colormap: str = "gray-to-green",
-             snt_min_percent: int = 1,
-             snt_max_percent: int = 99,
-             snt_min_value: Optional[int] = None,
-             snt_max_value: Optional[int] = None,
-             hto_fastq: Optional[LatchFile] = None,
-             hto_tags: Optional[LatchFile] = None,
-             hto_position: int = 0,
-             hto_annotation: Optional[LatchFile] = None,
-             hto_colormap: str = "gray-to-red",
-             hto_colorbar: bool = False,
-             hto_min_percent: int = 1,
-             hto_max_percent: int = 99,
-             hto_min_value: Optional[int] = None,
-             hto_max_value: Optional[int] = None,
+                   pipseeker_mode: str,
+                   output_directory: LatchOutputDir = LatchOutputDir("latch:///PIPseeker_Output"),
+                   fastq_directory: Optional[LatchDir] = None,
+                   chemistry: Chemistry = Chemistry.v4,
+                   genome_source: str,
+                   compiled_genome_reference: GenomeType,
+                   custom_compiled_genome: Optional[LatchDir],
+                   custom_compiled_genome_zipped: Optional[LatchFile],
+                   verbosity: Verbosity = Verbosity.two,
+                   random_seed: int = 0,
+                   save_svg: bool = False,
+                   dpi: int = 200,
+                   downsample_to: Optional[int] = None,
+                   input_reads: Optional[int] = None,
+                   retain_barcoded_fastqs: bool = False,
+                   sorted_bam: bool = False,
+                   remove_bam: bool = False,
+                   exons_only: bool = False,
+                   min_sensitivity: int = 1,
+                   max_sensitivity: int = 5,
+                   force_cells: Optional[int] = None,
+                   run_barnyard: bool = False,
+                   clustering_percent_genes: int = 10,
+                   diff_exp_genes: int = 50,
+                   principal_components: Optional[int] = None,
+                   nearest_neighbors: Optional[int] = None,
+                   resolution: Optional[int] = None,
+                   clustering_sensitivity: str = "medium",
+                   min_clusters_kmeans: Optional[int] = None,
+                   max_clusters_kmeans: Optional[int] = None,
+                   umap_axes: bool = False,
+                   annotation: Optional[LatchFile] = None,
+                   report_id: Optional[str] = None,
+                   report_description: Optional[str] = None,
+                   snt_fastq: Optional[LatchFile] = None,
+                   snt_tags: Optional[LatchFile] = None,
+                   snt_position: int = 0,
+                   snt_annotation: Optional[LatchFile] = None,
+                   snt_colormap: str = "gray-to-green",
+                   snt_min_percent: int = 1,
+                   snt_max_percent: int = 99,
+                   snt_min_value: Optional[int] = None,
+                   snt_max_value: Optional[int] = None,
+                   hto_fastq: Optional[LatchFile] = None,
+                   hto_tags: Optional[LatchFile] = None,
+                   hto_position: int = 0,
+                   hto_annotation: Optional[LatchFile] = None,
+                   hto_colormap: str = "gray-to-red",
+                   hto_colorbar: bool = False,
+                   hto_min_percent: int = 1,
+                   hto_max_percent: int = 99,
+                   hto_min_value: Optional[int] = None,
+                   hto_max_value: Optional[int] = None,
 
-             # cells mode args
-             previous: LatchDir,
-             hash_cellsmode: Optional[str] = None,
+                   # cells mode args
+                   previous: Optional[LatchDir] = None,
+                   hash_cellsmode: Optional[str] = None,
 
-             # buildmapref mode args
-             custom_genome_reference_fasta: LatchFile,
-             custom_genome_reference_gtf: LatchFile,
-             include_types: Optional[str] = None,
-             exclude_types: Optional[str] = None,
-             biotype_tag: Optional[str] = None,
-             read_length: Optional[int] = 100,
-             sparsity: Optional[int] = 3,
-             additional_params_buildmapref: Optional[str] = None
-        ) -> LatchOutputDir:
-
+                   # buildmapref mode args
+                   custom_genome_reference_fasta: Optional[LatchFile] = None,
+                   custom_genome_reference_gtf: Optional[LatchFile] = None,
+                   include_types: Optional[str] = None,
+                   exclude_types: Optional[str] = None,
+                   biotype_tag: Optional[str] = None,
+                   read_length: Optional[int] = 100,
+                   sparsity: Optional[int] = 3,
+                   additional_params_buildmapref: Optional[str] = None
+                   ) -> LatchOutputDir:
     reference_p = get_prebuilt_mappping_reference(genome_source=genome_source,
                                                   compiled_genome_reference=compiled_genome_reference,
                                                   custom_compiled_genome=custom_compiled_genome,
@@ -121,7 +120,6 @@ def pipseeker_task(*,
         f"{verbosity.value}",
         "--skip-version-check"
     ]
-
 
     if pipseeker_mode in ['full_mode', 'cells_mode']:
 
@@ -143,7 +141,6 @@ def pipseeker_task(*,
             f"{clustering_sensitivity}"
         ]
 
-
         # Full Mode.
         if pipseeker_mode == 'full_mode':
             pipseeker_cmd = [
@@ -162,14 +159,14 @@ def pipseeker_task(*,
             # Add full mode specific optional vars.
             if downsample_to is not None:
                 pipseeker_cmd += [
-                        "--downsample-to",
-                        f"{downsample_to}"
-                    ]
+                    "--downsample-to",
+                    f"{downsample_to}"
+                ]
                 if input_reads is not None:
                     pipseeker_cmd += [
-                            "--input-reads",
-                            f"{input_reads}"
-                        ]
+                        "--input-reads",
+                        f"{input_reads}"
+                    ]
 
         # Cells Mode.
         elif pipseeker_mode == 'cells_mode':
@@ -185,45 +182,45 @@ def pipseeker_task(*,
             # Add cells mode specific optional vars.
             if hash_cellsmode is not None:
                 pipseeker_cmd += [
-                        "--hash",
-                        f"{hash_cellsmode}"
+                    "--hash",
+                    f"{hash_cellsmode}"
                 ]
 
         # Extend Full or Cells mode commands.
         if force_cells is not None:
             pipseeker_cmd += [
-                    "--force-cells",
-                    f"{force_cells}"
-                ]
+                "--force-cells",
+                f"{force_cells}"
+            ]
 
         if min_clusters_kmeans is not None:
             pipseeker_cmd += [
-                    "--min-clusters-kmeans",
-                    f"{min_clusters_kmeans}"
-                ]
+                "--min-clusters-kmeans",
+                f"{min_clusters_kmeans}"
+            ]
 
         if max_clusters_kmeans is not None:
             pipseeker_cmd += [
-                    "--max-clusters-kmeans",
-                    f"{max_clusters_kmeans}"
+                "--max-clusters-kmeans",
+                f"{max_clusters_kmeans}"
             ]
 
         if annotation is not None:
             pipseeker_cmd += [
-                    "--annotation",
-                    f"{annotation.local_path}"
+                "--annotation",
+                f"{annotation.local_path}"
             ]
 
         if report_id is not None:
             pipseeker_cmd += [
-                    "--id",
-                    f"{report_id}"
+                "--id",
+                f"{report_id}"
             ]
 
         if report_description is not None:
             pipseeker_cmd += [
-                    "--description",
-                    f"{report_description}"
+                "--description",
+                f"{report_description}"
             ]
 
         if save_svg is True:
@@ -254,13 +251,13 @@ def pipseeker_task(*,
         ):
             if all(param is not None for param in parameters):
                 pipseeker_cmd += [
-                        "--principal-components",
-                        f"{principal_components}",
-                        "--nearest-neighbors",
-                        f"{nearest_neighbors}",
-                        "--resolution",
-                        f"{resolution}",
-                    ]
+                    "--principal-components",
+                    f"{principal_components}",
+                    "--nearest-neighbors",
+                    f"{nearest_neighbors}",
+                    "--resolution",
+                    f"{resolution}",
+                ]
         else:
             message(
                 typ="warning",
@@ -274,45 +271,45 @@ def pipseeker_task(*,
 
         if snt_fastq is not None:
             pipseeker_cmd += [
-                    "--snt-fastq",
-                    f"{snt_fastq.local_path}/.", # Use period for directory input.
-                    "--snt-position",
-                    f"{snt_position}"
-                ]
+                "--snt-fastq",
+                f"{snt_fastq.local_path}/.",  # Use period for directory input.
+                "--snt-position",
+                f"{snt_position}"
+            ]
 
             if snt_tags is not None:
                 pipseeker_cmd += [
-                        "--snt-tags",
-                        f"{snt_tags.local_path}",
-                    ]
+                    "--snt-tags",
+                    f"{snt_tags.local_path}",
+                ]
 
             if snt_annotation is not None:
                 pipseeker_cmd += [
-                        "--snt-annotation",
-                        f"{snt_annotation.local_path}",
-                    ]
+                    "--snt-annotation",
+                    f"{snt_annotation.local_path}",
+                ]
 
             if snt_colormap is not None:
                 pipseeker_cmd += [
-                        "--snt-colormap",
-                        f"{snt_colormap}"
-                    ]
+                    "--snt-colormap",
+                    f"{snt_colormap}"
+                ]
 
             if (snt_min_value is not None) and (snt_max_value is not None):
                 pipseeker_cmd += [
-                        "--snt-min-value",
-                        f"{snt_min_value}",
-                        "--snt-max-value",
-                        f"{snt_max_value}",
-                    ]
+                    "--snt-min-value",
+                    f"{snt_min_value}",
+                    "--snt-max-value",
+                    f"{snt_max_value}",
+                ]
 
             elif (snt_min_value is None) and (snt_max_value is None):
                 pipseeker_cmd += [
-                        "--snt-min-percent",
-                        f"{snt_min_percent}",
-                        "--snt-max-percent",
-                        f"{snt_max_percent}",
-                    ]
+                    "--snt-min-percent",
+                    f"{snt_min_percent}",
+                    "--snt-max-percent",
+                    f"{snt_max_percent}",
+                ]
             else:
                 message(
                     typ="warning",
@@ -324,11 +321,11 @@ def pipseeker_task(*,
 
         if hto_fastq is not None:
             pipseeker_cmd += [
-                    "--hto-fastq",
-                    f"{hto_fastq.local_path}/.", # Use period for directory input.
-                    "--hto-position",
-                    f"{hto_position}"
-                ]
+                "--hto-fastq",
+                f"{hto_fastq.local_path}/.",  # Use period for directory input.
+                "--hto-position",
+                f"{hto_position}"
+            ]
 
             if hto_tags is not None:
                 pipseeker_cmd += ["--hto-tags", f"{hto_tags.local_path}"]
@@ -348,7 +345,7 @@ def pipseeker_task(*,
                     f"{hto_min_value}",
                     "--hto-max-value",
                     f"{hto_max_value}"
-                    ]
+                ]
 
             elif (hto_min_value is None) and (hto_max_value is None):
                 pipseeker_cmd += [
@@ -421,9 +418,15 @@ def pipseeker_task(*,
     #############################
     # Run PIPseeker
     #############################
-    print(f'Running {" ".join(pipseeker_cmd)}')
-    subprocess.run(pipseeker_cmd, check=True)
-    print("Uploading results")
+    try:
+        print(f'Running {" ".join(pipseeker_cmd)}')
+        subprocess.run(pipseeker_cmd, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"PIPseeker failed with exit code {e.returncode}")
+        # raise e
+    finally:
+        print("Uploading results")
+        return LatchOutputDir(str(local_output_dir), output_directory.remote_path)
 
 
 def get_prebuilt_mappping_reference(*, genome_source, compiled_genome_reference, custom_compiled_genome,
@@ -538,4 +541,3 @@ def get_prebuilt_mappping_reference(*, genome_source, compiled_genome_reference,
                     stderr=subprocess.DEVNULL,
                 )
     return reference_p
-

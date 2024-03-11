@@ -499,11 +499,11 @@ metadata = LatchMetadata(
         Section("PIPseeker Configuration",
                 Fork(fork="pipseeker_mode",
                      display_name="",
-                     full_mode=ForkBranch('Full Mode',
+                     full_mode=ForkBranch("Full Mode",
                                           section_full_mode),
-                     cells_mode=ForkBranch('Cells',
+                     cells_mode=ForkBranch("Cells Mode",
                                            section_cells_mode),
-                     buildmap_mode=ForkBranch('Mapping Ref',
+                     buildmap_mode=ForkBranch("Build Mapping Reference",
                                               section_buildmapref)
                      )
                 )
@@ -515,7 +515,7 @@ metadata = LatchMetadata(
 def pipseeker_wf(*,
                  pipseeker_mode: str,
                  output_directory: LatchOutputDir = LatchOutputDir("latch:///PIPseeker_Output"),
-                 fastq_directory: LatchDir,
+                 fastq_directory: Optional[LatchDir] = None,
                  chemistry: Chemistry = Chemistry.v4,
                  genome_source: str,
                  compiled_genome_reference: GenomeType,
@@ -568,12 +568,12 @@ def pipseeker_wf(*,
                  hto_max_value: Optional[int] = None,
 
                  # cells mode args
-                 previous: LatchDir,
+                 previous: Optional[LatchDir] = None,
                  hash_cellsmode: Optional[str] = None,
 
                  # buildmapref mode args
-                 custom_genome_reference_fasta: LatchFile,
-                 custom_genome_reference_gtf: LatchFile,
+                 custom_genome_reference_fasta: Optional[LatchFile],
+                 custom_genome_reference_gtf: Optional[LatchFile],
                  include_types: Optional[str] = None,
                  exclude_types: Optional[str] = None,
                  biotype_tag: Optional[str] = None,
