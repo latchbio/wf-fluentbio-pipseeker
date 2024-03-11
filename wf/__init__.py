@@ -581,7 +581,20 @@ def pipseeker_wf(*,
                  sparsity: Optional[int] = 3,
                  additional_params_buildmapref: Optional[str] = None
                  ) -> LatchOutputDir:
+    """
+    # Fluent BioSciences PIPseeker
 
+    PIPseeker analyzes single-cell RNA data obtained with
+    [Fluent BioSciences](https://www.fluentbio.com/products/pipseeker-software-for-data-analysis/)
+    proprietary PIPseq™ 3 Single Cell RNA (scRNA-seq) Kits.
+
+    PIPseeker offers a comprehensive analysis solution that provides the user with detailed metrics,
+    gene expression profiles, basic cell quality and clustering indicators, and cell type annotation for some sample types.
+    The outputs of PIPseeker can then be used for subsequent, specialized tertiary analysis streams.
+    PIPseeker also supports specialized applications like measuring surface protein levels using antibody-derived tags
+    (ADTs) and cell hashing using hashtag oligonucleotides (HTOs).
+
+    """
     return pipseeker_task(
         pipseeker_mode=pipseeker_mode,
         output_directory=output_directory,

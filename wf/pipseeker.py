@@ -105,6 +105,11 @@ def pipseeker_task(*,
                    sparsity: Optional[int] = 3,
                    additional_params_buildmapref: Optional[str] = None
                    ) -> LatchOutputDir:
+
+    # Define the local path for full and cells mode.
+    local_output_dir = Path("/root/pipseeker_out")
+
+    # Obtain the reference path for prebuilt references.
     reference_p = get_prebuilt_mappping_reference(genome_source=genome_source,
                                                   compiled_genome_reference=compiled_genome_reference,
                                                   custom_compiled_genome=custom_compiled_genome,
@@ -112,8 +117,6 @@ def pipseeker_task(*,
 
     # Shared args.
     universal_shared_args = [
-        "--output-path",
-        f"{output_directory}",
         "--threads",
         "0",
         "--verbosity",
@@ -123,8 +126,12 @@ def pipseeker_task(*,
 
     if pipseeker_mode in ['full_mode', 'cells_mode']:
 
+        print("\nPreparing run")
+
         # Shared args for full and cells mode.
         full_and_cells_shared_args = [
+            "--output-path",
+            f"{local_output_dir}",
             "--random-seed",
             f"{random_seed}",
             "--dpi",
@@ -412,12 +419,10 @@ def pipseeker_task(*,
             additional_params_list = additional_params_buildmapref.split()
             pipseeker_cmd.extend(additional_params_list)
 
-    print("\nPreparing run")
-    local_output_dir = Path("/root/pipseeker_out")
-
     #############################
     # Run PIPseeker
     #############################
+
     try:
         print(f'Running {" ".join(pipseeker_cmd)}')
         subprocess.run(pipseeker_cmd, check=True)
@@ -436,7 +441,7 @@ def get_prebuilt_mappping_reference(*, genome_source, compiled_genome_reference,
     Returns:
         reference_p: Path to the prebuilt mapping reference.
     """
-    print("\nDownloading and unpacking reference genome")
+    print("\nPreparing reference genome")
 
     if genome_source == "compiled":
         if compiled_genome_reference == GenomeType.human:
