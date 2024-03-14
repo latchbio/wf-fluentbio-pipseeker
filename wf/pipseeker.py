@@ -4,7 +4,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Optional
 
-from latch import custom_task, medium_task
+from latch import custom_task
 from latch.functions.messages import message
 from latch.types import LatchDir, LatchFile, LatchOutputDir
 import sys
@@ -34,17 +34,135 @@ class Verbosity(Enum):
     two = "2"
 
 
+def get_prebuilt_mappping_reference(*, genome_source, prebuilt_genome, custom_prebuilt_genome,
+                                    custom_prebuilt_genome_zipped):
+    """
+    Download and unpack prebuilt mapping references (using Fluent-built or custom).
+    Returns:
+        reference_p: Path to the prebuilt mapping reference.
+    """
+    print("\nPreparing reference genome")
+
+    if genome_source == "prebuilt_genome":
+        if prebuilt_genome == GenomeType.human:
+            reference_zipped_p = LatchFile(
+                "s3://latch-public/test-data/18440/pipseeker-gex-reference-GRCh38-2022.04.tar.gz"
+            ).local_path
+            reference_p = Path("/root/pipseeker-gex-reference-GRCh38-2022.04")
+
+            subprocess.run(
+                ["tar", "-zxvf", f"{reference_zipped_p}", "-C", "/root"],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        elif prebuilt_genome == GenomeType.mouse:
+            reference_zipped_p = LatchFile(
+                "s3://latch-public/test-data/18440/pipseeker-gex-reference-GRCm39-2022.04.tar.gz"
+            ).local_path
+            reference_p = Path("/root/pipseeker-gex-reference-GRCm39-2022.04")
+
+            subprocess.run(
+                ["tar", "-zxvf", f"{reference_zipped_p}", "-C", "/root"],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        elif prebuilt_genome == GenomeType.human_mouse:
+            reference_zipped_p = LatchFile(
+                "s3://latch-public/test-data/18440/pipseeker-gex-reference-GRCh38-and-GRCm39-2022.04.tar.gz"
+            ).local_path
+            reference_p = Path(
+                "/root/pipseeker-gex-reference-GRCh38-and-GRCm39-2022.04"
+            )
+
+            subprocess.run(
+                ["tar", "-zxvf", f"{reference_zipped_p}", "-C", "/root"],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        elif prebuilt_genome == GenomeType.drosophilia:
+            reference_zipped_p = LatchFile(
+                "s3://latch-public/test-data/18440/pipseeker-gex-reference-dm-flybase-r6-v47-2022.09.tar.gz"
+            ).local_path
+            reference_p = Path(
+                "/root/pipseeker-gex-reference-dm-flybase-r6-v47-2022.09"
+            )
+
+            subprocess.run(
+                ["tar", "-zxvf", f"{reference_zipped_p}", "-C", "/root"],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        elif prebuilt_genome == GenomeType.zebrafish:
+            reference_zipped_p = LatchFile(
+                "s3://latch-public/test-data/18440/zebrafish_danio_rerio_GRCz11_r110_2023.08.tar.gz"
+            ).local_path
+            reference_p = Path("/root/zebrafish_danio_rerio_GRCz11_r110_2023.08")
+
+            subprocess.run(
+                ["tar", "-zxvf", f"{reference_zipped_p}", "-C", "/root"],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        elif prebuilt_genome == GenomeType.arabidopsis_thaliana:
+            reference_zipped_p = LatchFile(
+                "s3://latch-public/test-data/18440/pipseeker-gex-reference-arabidopsis-thaliana-TAIR10.55-protein-coding-2023.02.tar.gz"
+            ).local_path
+            reference_p = Path(
+                "/root/pipseeker-gex-reference-arabidopsis-thaliana-TAIR10.55-protein-coding-2023.02"
+            )
+
+            subprocess.run(
+                ["tar", "-zxvf", f"{reference_zipped_p}", "-C", "/root"],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+
+    # Using a custom prebuilt mapping reference.
+    elif genome_source == "custom_prebuilt_genome":
+        if custom_prebuilt_genome is not None:
+            reference_p = Path(custom_prebuilt_genome)
+        elif custom_prebuilt_genome_zipped is not None:
+            reference_zipped_p = Path(custom_prebuilt_genome_zipped)
+            reference_p = Path(f"/root/{reference_zipped_p.stem}").with_suffix("")
+
+            if reference_zipped_p.suffixes[-2:] == [".tar", ".gz"]:
+                subprocess.run(
+                    ["tar", "-zxvf", str(reference_zipped_p), "-C", "/root"],
+                    check=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+            elif reference_zipped_p.suffix == ".zip":
+                subprocess.run(
+                    ["unzip", "-o", str(reference_zipped_p), "-d", "/root"],
+                    check=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+    else:
+        print("No reference genome provided. Continuing.")
+        print(f"Genome source: {genome_source}")
+        reference_p = None
+
+    return reference_p
+
+
 @custom_task(cpu=18, memory=190, storage_gib=500)
-# @medium_task
 def pipseeker_task(*,
                    pipseeker_mode: str,
                    output_directory: LatchOutputDir = LatchOutputDir("latch:///PIPseeker_Output"),
                    fastq_directory: Optional[LatchDir] = None,
                    chemistry: Chemistry = Chemistry.v4,
                    genome_source: str,
-                   compiled_genome_reference: GenomeType,
-                   custom_compiled_genome: Optional[LatchDir],
-                   custom_compiled_genome_zipped: Optional[LatchFile],
+                   prebuilt_genome: GenomeType,
+                   custom_prebuilt_genome: Optional[LatchDir],
+                   custom_prebuilt_genome_zipped: Optional[LatchFile],
                    verbosity: Verbosity = Verbosity.two,
                    random_seed: int = 0,
                    save_svg: bool = False,
@@ -106,14 +224,7 @@ def pipseeker_task(*,
                    additional_params_buildmapref: Optional[str] = None
                    ) -> LatchOutputDir:
 
-    # Define the local path for full and cells mode.
-    local_output_dir = Path("/root/pipseeker_out")
-
-    # Obtain the reference path for prebuilt references.
-    reference_p = get_prebuilt_mappping_reference(genome_source=genome_source,
-                                                  compiled_genome_reference=compiled_genome_reference,
-                                                  custom_compiled_genome=custom_compiled_genome,
-                                                  custom_compiled_genome_zipped=custom_compiled_genome_zipped)
+    print(f"Running {pipseeker_mode}")
 
     # Shared args.
     universal_shared_args = [
@@ -130,8 +241,6 @@ def pipseeker_task(*,
 
         # Shared args for full and cells mode.
         full_and_cells_shared_args = [
-            "--output-path",
-            f"{local_output_dir}",
             "--random-seed",
             f"{random_seed}",
             "--dpi",
@@ -150,6 +259,17 @@ def pipseeker_task(*,
 
         # Full Mode.
         if pipseeker_mode == 'full_mode':
+            # Obtain the reference path for prebuilt references.
+            reference_p = get_prebuilt_mappping_reference(genome_source=genome_source,
+                                                          prebuilt_genome=prebuilt_genome,
+                                                          custom_prebuilt_genome=custom_prebuilt_genome,
+                                                          custom_prebuilt_genome_zipped=custom_prebuilt_genome_zipped)
+
+            # Define the local path.
+            local_output_dir = output_directory.local_path
+            # Define target directory for the output.
+            destination_directory = output_directory.remote_path
+
             pipseeker_cmd = [
                 "pipseeker",
                 "full",
@@ -158,7 +278,9 @@ def pipseeker_task(*,
                 "--star-index-path",
                 f"{reference_p}",
                 "--chemistry",
-                f"{chemistry.value}"
+                f"{chemistry.value}",
+                "--output-path",
+                f"{local_output_dir}",
             ]
 
             pipseeker_cmd += universal_shared_args + full_and_cells_shared_args
@@ -177,13 +299,17 @@ def pipseeker_task(*,
 
         # Cells Mode.
         elif pipseeker_mode == 'cells_mode':
+
+            # Define the local and target path for full and cells mode.
+            local_output_dir = previous.local_path
+            destination_directory = previous.remote_path
+
             pipseeker_cmd = [
                 "pipseeker",
                 "cells",
-                "previous",
+                "--previous",
                 f"{previous.local_path}"
             ]
-
             pipseeker_cmd += universal_shared_args + full_and_cells_shared_args
 
             # Add cells mode specific optional vars.
@@ -372,10 +498,13 @@ def pipseeker_task(*,
                 )
 
     # PIPseeker buildmapref mode.
-    elif genome_source == "custom_build":
+    elif pipseeker_mode == 'buildmapref_mode':
         custom_genome_reference_gtf_p = Path(custom_genome_reference_gtf)
         custom_genome_reference_fasta_p = Path(custom_genome_reference_fasta)
-        reference_p = Path("/root/genome_ref")
+
+        # Define the local path for full and cells mode.
+        local_output_dir = output_directory.local_path
+        destination_directory = output_directory.remote_path
 
         pipseeker_cmd = [
             "pipseeker",
@@ -385,7 +514,7 @@ def pipseeker_task(*,
             "--gtf",
             f"{custom_genome_reference_gtf_p}",
             "--output-path",
-            f"{reference_p}",
+            f"{local_output_dir}",
             "--read-length",
             f"{read_length}",
             "--sparsity",
@@ -430,119 +559,6 @@ def pipseeker_task(*,
         print(f"PIPseeker failed with exit code {e.returncode}")
         # raise e
     finally:
-        print("Uploading results")
-        return LatchOutputDir(str(local_output_dir), output_directory.remote_path)
+        print(f"Uploading results from {local_output_dir} to {destination_directory}")
+        return LatchOutputDir(str(local_output_dir), remote_path=destination_directory)
 
-
-def get_prebuilt_mappping_reference(*, genome_source, compiled_genome_reference, custom_compiled_genome,
-                                    custom_compiled_genome_zipped):
-    """
-    Download and unpack prebuilt mapping references (using Fluent-built or custom).
-    Returns:
-        reference_p: Path to the prebuilt mapping reference.
-    """
-    print("\nPreparing reference genome")
-
-    if genome_source == "compiled":
-        if compiled_genome_reference == GenomeType.human:
-            reference_zipped_p = LatchFile(
-                "s3://latch-public/test-data/18440/pipseeker-gex-reference-GRCh38-2022.04.tar.gz"
-            ).local_path
-            reference_p = Path("/root/pipseeker-gex-reference-GRCh38-2022.04")
-
-            subprocess.run(
-                ["tar", "-zxvf", f"{reference_zipped_p}", "-C", "/root"],
-                check=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-        elif compiled_genome_reference == GenomeType.mouse:
-            reference_zipped_p = LatchFile(
-                "s3://latch-public/test-data/18440/pipseeker-gex-reference-GRCm39-2022.04.tar.gz"
-            ).local_path
-            reference_p = Path("/root/pipseeker-gex-reference-GRCm39-2022.04")
-
-            subprocess.run(
-                ["tar", "-zxvf", f"{reference_zipped_p}", "-C", "/root"],
-                check=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-        elif compiled_genome_reference == GenomeType.human_mouse:
-            reference_zipped_p = LatchFile(
-                "s3://latch-public/test-data/18440/pipseeker-gex-reference-GRCh38-and-GRCm39-2022.04.tar.gz"
-            ).local_path
-            reference_p = Path(
-                "/root/pipseeker-gex-reference-GRCh38-and-GRCm39-2022.04"
-            )
-
-            subprocess.run(
-                ["tar", "-zxvf", f"{reference_zipped_p}", "-C", "/root"],
-                check=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-        elif compiled_genome_reference == GenomeType.drosophilia:
-            reference_zipped_p = LatchFile(
-                "s3://latch-public/test-data/18440/pipseeker-gex-reference-dm-flybase-r6-v47-2022.09.tar.gz"
-            ).local_path
-            reference_p = Path(
-                "/root/pipseeker-gex-reference-dm-flybase-r6-v47-2022.09"
-            )
-
-            subprocess.run(
-                ["tar", "-zxvf", f"{reference_zipped_p}", "-C", "/root"],
-                check=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-        elif compiled_genome_reference == GenomeType.zebrafish:
-            reference_zipped_p = LatchFile(
-                "s3://latch-public/test-data/18440/zebrafish_danio_rerio_GRCz11_r110_2023.08.tar.gz"
-            ).local_path
-            reference_p = Path("/root/zebrafish_danio_rerio_GRCz11_r110_2023.08")
-
-            subprocess.run(
-                ["tar", "-zxvf", f"{reference_zipped_p}", "-C", "/root"],
-                check=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-        elif compiled_genome_reference == GenomeType.arabidopsis_thaliana:
-            reference_zipped_p = LatchFile(
-                "s3://latch-public/test-data/18440/pipseeker-gex-reference-arabidopsis-thaliana-TAIR10.55-protein-coding-2023.02.tar.gz"
-            ).local_path
-            reference_p = Path(
-                "/root/pipseeker-gex-reference-arabidopsis-thaliana-TAIR10.55-protein-coding-2023.02"
-            )
-
-            subprocess.run(
-                ["tar", "-zxvf", f"{reference_zipped_p}", "-C", "/root"],
-                check=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-
-    # Using a custom prebuilt mapping reference.
-    elif genome_source == "custom_compiled":
-        if custom_compiled_genome is not None:
-            reference_p = Path(custom_compiled_genome)
-        elif custom_compiled_genome_zipped is not None:
-            reference_zipped_p = Path(custom_compiled_genome_zipped)
-            reference_p = Path(f"/root/{reference_zipped_p.stem}").with_suffix("")
-
-            if reference_zipped_p.suffixes[-2:] == [".tar", ".gz"]:
-                subprocess.run(
-                    ["tar", "-zxvf", str(reference_zipped_p), "-C", "/root"],
-                    check=True,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                )
-            elif reference_zipped_p.suffix == ".zip":
-                subprocess.run(
-                    ["unzip", "-o", str(reference_zipped_p), "-d", "/root"],
-                    check=True,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                )
-    return reference_p

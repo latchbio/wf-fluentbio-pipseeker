@@ -19,30 +19,18 @@ from latch.resources.launch_plan import LaunchPlan
 
 from wf.pipseeker import *
 
+
+# Define the parameters that will be displayed in the GUI and used in the workflow.
+# Note: the actual grouping of parameters is not important here, as all will be merged and available in the end.
 shared_parameters = {
     "pipseeker_mode": LatchParameter(
         display_name='PIPseeker Mode',
         description="full mode (standard runs), "
                     "cells mode (rerunning cell calling from existing output), "
-                    "or buildmapref (building a custom mapping reference)")
-}
-
-full_mode_parameters = {
-    "fastq_directory": LatchParameter(
-        display_name="FASTQ Directory",
-        description="Directory of input FASTQ files. All FASTQ files in the directory will be used.",
-        batch_table_column=True,
-    ),
-    "chemistry": LatchParameter(
-        display_name="Chemistry",
-        batch_table_column=True,
+                    "or buildmapref (building a custom mapping reference)"
     ),
     "verbosity": LatchParameter(
         display_name="Verbosity",
-        batch_table_column=True,
-    ),
-    "random_seed": LatchParameter(
-        display_name="Random Seed",
         batch_table_column=True,
     ),
     "save_svg": LatchParameter(
@@ -53,29 +41,8 @@ full_mode_parameters = {
         display_name="DPI",
         batch_table_column=True,
     ),
-    "downsample_to": LatchParameter(
-        display_name="Downsample",
-        batch_table_column=True,
-    ),
-    "input_reads": LatchParameter(
-        display_name="Number of Input Reads",
-        description="The total number of reads in the provided fastq, needed only when downsampling. "
-                    "If not provided, reads will be counted manually."
-    ),
-    "retain_barcoded_fastqs": LatchParameter(
-        display_name="Retain Barcoded FASTQs",
-        batch_table_column=True,
-    ),
-    "sorted_bam": LatchParameter(
-        display_name="Generate Sorted BAM",
-        batch_table_column=True,
-    ),
-    "remove_bam": LatchParameter(
-        display_name="Remove BAM",
-        batch_table_column=True,
-    ),
-    "exons_only": LatchParameter(
-        display_name="Exons Only",
+    "random_seed": LatchParameter(
+        display_name="Random Seed",
         batch_table_column=True,
     ),
     "min_sensitivity": LatchParameter(
@@ -221,6 +188,62 @@ full_mode_parameters = {
     "output_directory": LatchParameter(
         display_name="Output Directory",
         description="Output Directory",
+        batch_table_column=True
+    )
+}
+
+full_mode_parameters = {
+    "fastq_directory": LatchParameter(
+        display_name="FASTQ Directory",
+        description="Directory of input FASTQ files. All FASTQ files in the directory will be used.",
+        batch_table_column=True,
+    ),
+    "chemistry": LatchParameter(
+        display_name="Chemistry",
+        batch_table_column=True,
+    ),
+    "genome_source": LatchParameter(display_name="Genome Reference"
+    ),
+    "prebuilt_genome": LatchParameter(
+        display_name="Compiled Genome",
+        description="Reference genome to be used",
+        batch_table_column=True,
+    ),
+    "custom_prebuilt_genome_zipped": LatchParameter(
+        display_name="Zipped Prebuilt Custom Genome (.tar.gz or .zip)",
+        placeholder=".tar.gz or .zip zipped file",
+        description="Zipped (tar.gz) file of custom compiled PIPseeker genome",
+        batch_table_column=True,
+    ),
+    "custom_prebuilt_genome": LatchParameter(
+        display_name="Unzipped Prebuilt Custom Genome Directory",
+        placeholder="Unzipped directory with custom compiled PIPseeker genome",
+        description="Directory with custom compiled PIPseeker genome",
+        batch_table_column=True,
+    ),
+    "downsample_to": LatchParameter(
+        display_name="Downsample",
+        batch_table_column=True,
+    ),
+    "input_reads": LatchParameter(
+        display_name="Number of Input Reads",
+        description="The total number of reads in the provided fastq, needed only when downsampling. "
+                    "If not provided, reads will be counted manually."
+    ),
+    "retain_barcoded_fastqs": LatchParameter(
+        display_name="Retain Barcoded FASTQs",
+        batch_table_column=True,
+    ),
+    "sorted_bam": LatchParameter(
+        display_name="Generate Sorted BAM",
+        batch_table_column=True,
+    ),
+    "remove_bam": LatchParameter(
+        display_name="Remove BAM",
+        batch_table_column=True,
+    ),
+    "exons_only": LatchParameter(
+        display_name="Exons Only",
         batch_table_column=True,
     )}
 
@@ -234,24 +257,6 @@ cells_mode_parameters = {
 }
 
 buildmapref_mode_parameters = {
-    "genome_source": LatchParameter(display_name="Genome Reference"),
-    "compiled_genome_reference": LatchParameter(
-        display_name="Compiled Genome",
-        description="Reference genome to be used",
-        batch_table_column=True,
-    ),
-    "custom_compiled_genome_zipped": LatchParameter(
-        display_name="Zipped Compiled Custom Genome (.tar.gz or .zip)",
-        placeholder=".tar.gz or .zip zipped file",
-        description="Zipped (tar.gz) file of custom compiled PIPseeker genome",
-        batch_table_column=True,
-    ),
-    "custom_compiled_genome": LatchParameter(
-        display_name="Unzipped Compiled Custom Genome Directory",
-        placeholder="Unzipped directory with custom compiled PIPseeker genome",
-        description="Directory with custom compiled PIPseeker genome",
-        batch_table_column=True,
-    ),
     "custom_genome_reference_fasta": LatchParameter(
         display_name="Genome FASTA",
         description="Reference genome FASTA to be used",
@@ -380,7 +385,6 @@ shared_full_cells_mode_spoiler_section = Section("",
                                                  )
                                                  )
 
-
 full_mode_spoiler_section = Section("",
                                     Section(
                                         "FASTQ Processing",
@@ -411,36 +415,34 @@ full_mode_spoiler_section = Section("",
                                     ),
                                     )
 
-
 full_mode_mapping_section = Section(
     "Mapping Reference",
     Fork(
         "genome_source",
         "",
-        compiled=ForkBranch(
-            "Compiled Reference Genome",
+        prebuilt_genome=ForkBranch(
+            "Prebuilt Reference Genome",
             Params(
-                "compiled_genome_reference",
+                "prebuilt_genome",
             ),
         ),
-        custom_compiled=ForkBranch(
-            "Precompiled Custom Reference Genome",
+        custom_prebuilt_genome=ForkBranch(
+            "Custom Prebuilt Reference Genome",
             Text("Choose one of the following:"),
             Params(
-                "custom_compiled_genome_zipped",
-                "custom_compiled_genome",
+                "custom_prebuilt_genome_zipped",
+                "custom_prebuilt_genome",
             )
         )
     )
 )
-
 
 section_full_mode = Section(
     "Full Mode",
     Params("output_directory",
            "fastq_directory",
            "chemistry"
-    ),
+           ),
     full_mode_mapping_section,
     Spoiler(
         "Additional Parameters",
@@ -448,19 +450,16 @@ section_full_mode = Section(
         shared_full_cells_mode_spoiler_section)
 )
 
-
 section_cells_mode = Section(
     "Cells Mode",
-    Params("output_directory",
-           "previous",
-    ),
+    Params("previous",
+           ),
     Spoiler(
         "Additional Parameters",
         shared_full_cells_mode_spoiler_section,
         Params("hash_cellsmode")
     )
 )
-
 
 section_buildmapref = Section(
     "Generate Custom Reference Genome",
@@ -482,7 +481,6 @@ section_buildmapref = Section(
     )
 )
 
-
 metadata = LatchMetadata(
     display_name="Fluent BioSciences PIPseeker v3.1.3",
     documentation="",
@@ -503,8 +501,8 @@ metadata = LatchMetadata(
                                           section_full_mode),
                      cells_mode=ForkBranch("Cells Mode",
                                            section_cells_mode),
-                     buildmap_mode=ForkBranch("Build Mapping Reference",
-                                              section_buildmapref)
+                     buildmapref_mode=ForkBranch("Build Mapping Reference",
+                                                 section_buildmapref)
                      )
                 )
     ],
@@ -518,9 +516,9 @@ def pipseeker_wf(*,
                  fastq_directory: Optional[LatchDir] = None,
                  chemistry: Chemistry = Chemistry.v4,
                  genome_source: str,
-                 compiled_genome_reference: GenomeType,
-                 custom_compiled_genome: Optional[LatchDir],
-                 custom_compiled_genome_zipped: Optional[LatchFile],
+                 prebuilt_genome: GenomeType,
+                 custom_prebuilt_genome: Optional[LatchDir],
+                 custom_prebuilt_genome_zipped: Optional[LatchFile],
                  verbosity: Verbosity = Verbosity.two,
                  random_seed: int = 0,
                  save_svg: bool = False,
@@ -601,9 +599,9 @@ def pipseeker_wf(*,
         fastq_directory=fastq_directory,
         chemistry=chemistry,
         genome_source=genome_source,
-        compiled_genome_reference=compiled_genome_reference,
-        custom_compiled_genome=custom_compiled_genome,
-        custom_compiled_genome_zipped=custom_compiled_genome_zipped,
+        prebuilt_genome=prebuilt_genome,
+        custom_prebuilt_genome=custom_prebuilt_genome,
+        custom_prebuilt_genome_zipped=custom_prebuilt_genome_zipped,
         sorted_bam=sorted_bam,
         verbosity=verbosity,
         random_seed=random_seed,
@@ -687,3 +685,4 @@ LaunchPlan(
         "output_directory": LatchOutputDir("latch:///PIPseeker_Output/Sample2"),
     },
 )
+
