@@ -1,4 +1,5 @@
 import subprocess
+import sys
 
 from enum import Enum
 from pathlib import Path
@@ -7,8 +8,6 @@ from typing import Optional
 from latch import custom_task
 from latch.functions.messages import message
 from latch.types import LatchDir, LatchFile, LatchOutputDir
-import sys
-import zipfile
 
 sys.stdout.reconfigure(line_buffering=True)
 
@@ -26,8 +25,6 @@ class Chemistry(Enum):
     v3 = "v3"
     v4 = "v4"
     v5 = "v5"
-    pipcyte = "pipcyte"
-
 
 class Verbosity(Enum):
     zero = "0"
@@ -180,7 +177,8 @@ def get_prebuilt_mappping_reference(*, genome_source, prebuilt_genome, custom_pr
     return reference_p
 
 
-@custom_task(cpu=8, memory=64, storage_gib=300)
+@custom_task(cpu=18, memory=190, storage_gib=500)
+#   Above is for T20 build.  For T2 mode -->  @custom_task(cpu=8, memory=64, storage_gib=300)
 def pipseeker_task(*,
                    pipseeker_mode: str,
                    output_directory: LatchOutputDir = LatchOutputDir("latch:///PIPseeker_Output"),
