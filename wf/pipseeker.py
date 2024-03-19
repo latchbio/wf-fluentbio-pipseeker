@@ -8,6 +8,7 @@ from latch import custom_task
 from latch.functions.messages import message
 from latch.types import LatchDir, LatchFile, LatchOutputDir
 import sys
+import zipfile
 
 sys.stdout.reconfigure(line_buffering=True)
 
@@ -128,9 +129,11 @@ def get_prebuilt_mappping_reference(*, genome_source, prebuilt_genome, custom_pr
         if custom_prebuilt_genome is not None:
             reference_p = Path(custom_prebuilt_genome)
         elif custom_prebuilt_genome_zipped is not None:
+            print("Unpacking the custom prebuilt genome")
             reference_zipped_p = Path(custom_prebuilt_genome_zipped)
             reference_p = Path(f"/root/{reference_zipped_p.stem}").with_suffix("")
 
+            unpacked_data = False # Tracks whether the untar/unzip operation was attempted.
             if reference_zipped_p.suffixes[-2:] == [".tar", ".gz"]:
                 subprocess.run(
                     ["tar", "-zxvf", str(reference_zipped_p), "-C", "/root"],
@@ -138,6 +141,8 @@ def get_prebuilt_mappping_reference(*, genome_source, prebuilt_genome, custom_pr
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                 )
+                unpacked_data = True
+
             elif reference_zipped_p.suffix == ".zip":
                 subprocess.run(
                     ["unzip", "-o", str(reference_zipped_p), "-d", "/root"],
@@ -145,6 +150,28 @@ def get_prebuilt_mappping_reference(*, genome_source, prebuilt_genome, custom_pr
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                 )
+                unpacked_data = True
+
+            # Check whether the uncompressed directory exists and matches the expected name.
+            if unpacked_data:
+                #   This handles the case where users might not pack their data inside of a single directory
+                #   or the top-level zipped dir might use a different name than the parent zipped filename.
+                #   If the directory is not found, the user will be prompted to re-upload the data.
+                # List the files in the root dir and see if the directory name is present from the zipped file output
+                root_dir = Path("/root")
+                root_dir_files = [f.name for f in root_dir.iterdir()]
+
+                # Check if the directory name is present in the root dir
+                if not reference_zipped_p.stem in root_dir_files:
+                    raise ValueError(f"Unpacking failed. The directory {reference_p} was not found.\n"
+                                     "Please ensure that you compressed your reference with a single top-level "
+                                     "directory containing the reference genome. \n"
+                                     "Also ensure the top-level folder matches the prefix of your compressed file.")
+
+            else:
+                # Data was not unpacked, due to file extension mismatch.
+                print('The provided genome must be compressed using .tar.gz or .zip format '
+                      'or uploaded without compression.')
     else:
         print("No reference genome provided. Continuing.")
         print(f"Genome source: {genome_source}")
@@ -153,7 +180,7 @@ def get_prebuilt_mappping_reference(*, genome_source, prebuilt_genome, custom_pr
     return reference_p
 
 
-@custom_task(cpu=18, memory=190, storage_gib=500)
+@custom_task(cpu=8, memory=64, storage_gib=300)
 def pipseeker_task(*,
                    pipseeker_mode: str,
                    output_directory: LatchOutputDir = LatchOutputDir("latch:///PIPseeker_Output"),
