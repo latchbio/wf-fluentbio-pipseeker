@@ -266,7 +266,7 @@ def pipseeker_task(*,
                                                           custom_prebuilt_genome_zipped=custom_prebuilt_genome_zipped)
 
             # Define the local path.
-            local_output_dir = output_directory.local_path
+            local_output_dir = Path("/root/pipseeker_out")
             # Define target directory for the output.
             destination_directory = output_directory.remote_path
 
@@ -308,7 +308,7 @@ def pipseeker_task(*,
                 "pipseeker",
                 "cells",
                 "--previous",
-                f"{previous.local_path}"
+                f"{local_output_dir}"
             ]
             pipseeker_cmd += universal_shared_args + full_and_cells_shared_args
 
@@ -503,7 +503,7 @@ def pipseeker_task(*,
         custom_genome_reference_fasta_p = Path(custom_genome_reference_fasta)
 
         # Define the local path for full and cells mode.
-        local_output_dir = output_directory.local_path
+        local_output_dir = Path("/root/pipseeker_out")
         destination_directory = output_directory.remote_path
 
         pipseeker_cmd = [
